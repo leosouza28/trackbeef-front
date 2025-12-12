@@ -1,0 +1,28 @@
+.carrinho-float {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 2px solid #eee;
+  z-index: 1050;
+  animation: pulseGlow 3s ease-in-out infinite;
+  box-shadow: 0 0 0px rgba(0, 123, 255, 0.3);
+}
+
+.carrinho-float:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 12px rgba(0, 123, 255, 0.4);
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0px rgba(0, 123, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.6);
+  }
+}

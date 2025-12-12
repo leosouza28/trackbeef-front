@@ -1,0 +1,48 @@
+/* You can add global styles to this file, and also import other style files */
+@import url("https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Quicksand:wght@300..700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&display=swap");
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
+
+body {
+  font-family: "Lato", sans-serif !important;
+}
+
+.quicksand {
+  font-family: "Lato", sans-serif;
+}
+.fredoka {
+  font-family: "Lato", sans-serif;
+}
+
+.bi-color{
+  color: var(--bs-dark);
+}
+
+/* Customizing Bootstrap primary color */
+$primary:   #0A2A7A;   // Azul
+$secondary: #D48A00;   // Dourado escuro
+$warning:   #F2B705;   // Amarelo ouro
+$dark:      #6A3F0A;   // Marrom telhado
+$light:     #F8D97A;   // Amarelo claro suave
+$info:      #0A2A7A;   // Mantém o azul como info
+$success:   #6A3F0A;   // Tom mais sóbrio
+$danger:    #D48A00;   // Pode usar como “alerta forte”
+$body-bg:   #F1F1F6;   // Fundo cinza claro
+$body-color: #1C1C1C; // Texto cinza escuro
+
+
+/* Importing Bootstrap SCSS file. */
+@import "bootstrap/scss/bootstrap";
+
+
+// Estilo apenas para dispositivos móveis
+@media (max-width: 768px) {
+  html,
+  body {
+    touch-action: manipulation; /* importante em Android/Chrome */
+    user-select: none; /* ajuda no Android */
+    -webkit-user-select: none; /* ajuda no iOS */
+    -webkit-touch-callout: none;
+  }
+}

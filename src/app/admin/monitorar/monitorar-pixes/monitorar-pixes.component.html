@@ -1,0 +1,610 @@
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="fw-bold mb-0">
+                <i class="bi bi-cash-coin me-2"></i>
+                Monitoramento de PIX
+            </h1>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <form [formGroup]="form" (ngSubmit)="query()">
+                        <div class="row g-3 align-items-end">
+                            <!-- Tipo de Data -->
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-funnel me-1"></i>
+                                    Filtrar por
+                                </label>
+                                <select 
+                                    class="form-select" 
+                                    formControlName="tipo_data">
+                                    <option value="pix">Data do PIX</option>
+                                    <option value="caixa">Data do Caixa</option>
+                                </select>
+                            </div>
+
+                            <!-- Data -->
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-calendar3 me-1"></i>
+                                    Data
+                                </label>
+                                <input 
+                                    type="date" 
+                                    class="form-control" 
+                                    formControlName="data">
+                            </div>
+
+                            <!-- Busca -->
+                            <div class="col-md-5">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-search me-1"></i>
+                                    Buscar por nome, CPF ou CNPJ
+                                </label>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    formControlName="busca"
+                                    placeholder="Digite para buscar...">
+                            </div>
+
+                            <!-- Itens por página -->
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-list-ul me-1"></i>
+                                    Por página
+                                </label>
+                                <select 
+                                    class="form-select" 
+                                    formControlName="perpage"
+                                    (change)="changePerPage()">
+                                    <option *ngFor="let opt of perpageOptions" [value]="opt">{{opt}}</option>
+                                </select>
+                            </div>
+
+                            <!-- Botão Buscar -->
+                            <div class="col-md-2">
+                                <button 
+                                    type="submit" 
+                                    class="btn btn-primary w-100"
+                                    [disabled]="loading">
+                                    <span *ngIf="!loading">
+                                        <i class="bi bi-search me-1"></i>
+                                        Buscar
+                                    </span>
+                                    <span *ngIf="loading">
+                                        <span class="spinner-border spinner-border-sm me-1"></span>
+                                        Buscando...
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações e Paginação Superior -->
+    <div class="row row-gap-3 mb-3">
+        <div class="col-md-6">
+            <div class="alert alert-info mb-0 d-flex align-items-center">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                <span>
+                    Mostrando <strong>{{data.lista.length}}</strong> de <strong>{{data.total}}</strong> transações
+                </span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm mb-0" *ngIf="data.total_caixa_data !== undefined">
+                <div class="card-body py-2">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <small class="text-muted d-block">
+                                <i class="bi bi-cash-stack me-1"></i>
+                                Total do Caixa
+                            </small>
+                            <h5 class="mb-0 fw-bold text-success">
+                                {{formatarValor(data.total_caixa_data)}}
+                            </h5>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-primary">
+                                {{form.get('data')?.value | date:'dd/MM/yyyy'}}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm mb-0" *ngIf="data.total_pendentes_processamento_data !== undefined">
+                <div class="card-body py-2">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="flex-grow-1">
+                            <small class="text-muted d-block">
+                                <i class="bi bi-clock-history me-1"></i>
+                                Pendentes
+                            </small>
+                            <h5 class="mb-0 fw-bold" [class.text-warning]="data.total_pendentes_processamento_data > 0" [class.text-success]="data.total_pendentes_processamento_data === 0">
+                                {{data.total_pendentes_processamento_data}}
+                            </h5>
+                        </div>
+                        <div class="text-end">
+                            <i class="bi fs-3" [class.bi-exclamation-triangle-fill]="data.total_pendentes_processamento_data > 0" [class.bi-check-circle-fill]="data.total_pendentes_processamento_data === 0" [class.text-warning]="data.total_pendentes_processamento_data > 0" [class.text-success]="data.total_pendentes_processamento_data === 0"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12">
+            <nav aria-label="Navegação de páginas">
+                <ul class="pagination justify-content-end mb-0">
+                    <li class="page-item" [class.disabled]="getCurrentPage() === 1">
+                        <button class="page-link" (click)="goToPage(1)" [disabled]="getCurrentPage() === 1">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </button>
+                    </li>
+                    <li class="page-item" [class.disabled]="getCurrentPage() === 1">
+                        <button class="page-link" (click)="goToPage(getCurrentPage() - 1)" [disabled]="getCurrentPage() === 1">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                    </li>
+                    <li class="page-item active">
+                        <span class="page-link">
+                            {{getCurrentPage()}} de {{getTotalPages()}}
+                        </span>
+                    </li>
+                    <li class="page-item" [class.disabled]="getCurrentPage() === getTotalPages()">
+                        <button class="page-link" (click)="goToPage(getCurrentPage() + 1)" [disabled]="getCurrentPage() === getTotalPages()">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </li>
+                    <li class="page-item" [class.disabled]="getCurrentPage() === getTotalPages()">
+                        <button class="page-link" (click)="goToPage(getTotalPages())" [disabled]="getCurrentPage() === getTotalPages()">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="row" *ngIf="loading">
+        <div class="col-12 text-center py-5">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+            <p class="mt-3 text-muted">Carregando transações...</p>
+        </div>
+    </div>
+
+    <!-- Cards de PIX -->
+    <div class="row g-3" *ngIf="!loading">
+        <div class="col-md-6 col-lg-4 col-xl-3" *ngFor="let pix of data.lista">
+            <div class="card border-0 shadow-sm h-100 pix-card" (click)="openPixModal(pixModal, pix)">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="badge bg-success">
+                            <i class="bi bi-check-circle-fill me-1"></i>
+                            {{pix.gateway}}
+                        </div>
+                        <small class="text-muted">
+                            <i class="bi bi-clock me-1"></i>
+                            {{pix.horario | dateFromNow}}
+                        </small>
+                    </div>
+                    
+                    <h5 class="card-title text-success fw-bold mb-3">
+                        {{formatarValor(pix.valor)}}
+                    </h5>
+                    
+                    <div class="mb-2">
+                        <small class="text-muted d-block mb-1">
+                            <i class="bi bi-person-fill me-1"></i>
+                            Nome
+                        </small>
+                        <p class="mb-0 fw-semibold text-truncate" [title]="pix.nomePagador">
+                            {{pix.nomePagador}}
+                        </p>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <small class="text-muted d-block mb-1">
+                            <i class="bi bi-card-text me-1"></i>
+                            {{getTipoDocumento(pix)}}
+                        </small>
+                        <p class="mb-0 font-monospace">
+                            {{formatarDocumento(pix)}}
+                        </p>
+                    </div>
+                    
+                    <div class="mt-3 pt-3 border-top">
+                        <small class="text-muted d-block mb-2">
+                            <i class="bi bi-calendar-event me-1"></i>
+                            {{formatarData(pix.horario).split(' ')[0]}}
+                        </small>
+                        
+                        <!-- Progress Steps -->
+                        <div class="mt-2">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <small class="text-muted">Processamento</small>
+                                <small class="fw-bold text-primary">
+                                    {{getPixStepsStatus(pix).completed}}/{{getPixStepsStatus(pix).total}}
+                                </small>
+                            </div>
+                            <div class="progress" style="height: 5px;">
+                                <div 
+                                    class="progress-bar" 
+                                    [class.bg-success]="getPixStepsStatus(pix).completed === getPixStepsStatus(pix).total"
+                                    [class.bg-warning]="getPixStepsStatus(pix).completed > 0 && getPixStepsStatus(pix).completed < getPixStepsStatus(pix).total"
+                                    [class.bg-secondary]="getPixStepsStatus(pix).completed === 0"
+                                    [style.width.%]="(getPixStepsStatus(pix).completed / getPixStepsStatus(pix).total) * 100">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 text-center">
+                    <small class="text-primary">
+                        <i class="bi bi-eye me-1"></i>
+                        Clique para gerenciar
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mensagem quando não há resultados -->
+    <div class="row" *ngIf="!loading && data.lista.length === 0">
+        <div class="col-12">
+            <div class="alert alert-warning text-center">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                Nenhuma transação encontrada para os filtros selecionados.
+            </div>
+        </div>
+    </div>
+
+    <!-- Paginação Inferior -->
+    <div class="row mt-4" *ngIf="!loading && data.lista.length > 0">
+        <div class="col-12">
+            <nav aria-label="Navegação de páginas">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item" [class.disabled]="getCurrentPage() === 1">
+                        <button class="page-link" (click)="goToPage(1)" [disabled]="getCurrentPage() === 1">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </button>
+                    </li>
+                    <li class="page-item" [class.disabled]="getCurrentPage() === 1">
+                        <button class="page-link" (click)="goToPage(getCurrentPage() - 1)" [disabled]="getCurrentPage() === 1">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                    </li>
+                    <li class="page-item active">
+                        <span class="page-link">
+                            Página {{getCurrentPage()}} de {{getTotalPages()}}
+                        </span>
+                    </li>
+                    <li class="page-item" [class.disabled]="getCurrentPage() === getTotalPages()">
+                        <button class="page-link" (click)="goToPage(getCurrentPage() + 1)" [disabled]="getCurrentPage() === getTotalPages()">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </li>
+                    <li class="page-item" [class.disabled]="getCurrentPage() === getTotalPages()">
+                        <button class="page-link" (click)="goToPage(getTotalPages())" [disabled]="getCurrentPage() === getTotalPages()">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Detalhes do PIX -->
+<ng-template #pixModal let-modal>
+    <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+            <i class="bi bi-receipt me-2"></i>
+            Detalhes da Transação PIX
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"></button>
+    </div>
+    <div class="modal-body" *ngIf="selectedPix">
+        <div class="row g-3">
+            <!-- Valor -->
+            <div class="col-12 text-center py-3 bg-light rounded">
+                <small class="text-muted d-block mb-2">Valor da Transação</small>
+                <h2 class="text-success fw-bold mb-0">
+                    {{formatarValor(selectedPix.valor)}}
+                </h2>
+            </div>
+
+            <!-- Informações do Pagador -->
+            <div class="col-12">
+                <h6 class="border-bottom pb-2 mb-3">
+                    <i class="bi bi-person-circle me-2"></i>
+                    Dados do Pagador
+                </h6>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label text-muted small mb-1">
+                    <i class="bi bi-person-fill me-1"></i>
+                    Nome
+                </label>
+                <p class="fw-semibold">{{selectedPix.nomePagador}}</p>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label text-muted small mb-1">
+                    <i class="bi bi-card-text me-1"></i>
+                    {{getTipoDocumento(selectedPix)}}
+                </label>
+                <p class="fw-semibold font-monospace">{{formatarDocumento(selectedPix)}}</p>
+            </div>
+
+            <!-- Informações da Transação -->
+            <div class="col-12 mt-4">
+                <h6 class="border-bottom pb-2 mb-3">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Dados da Transação
+                </h6>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label text-muted small mb-1">
+                    <i class="bi bi-calendar-event me-1"></i>
+                    Data e Hora
+                </label>
+                <p class="fw-semibold">{{formatarData(selectedPix.horario)}}</p>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label text-muted small mb-1">
+                    <i class="bi bi-bank me-1"></i>
+                    Gateway
+                </label>
+                <p>
+                    <span class="badge bg-success">{{selectedPix.gateway}}</span>
+                </p>
+            </div>
+
+            <!-- <div class="col-12">
+                <label class="form-label text-muted small mb-1">
+                    <i class="bi bi-hash me-1"></i>
+                    End to End ID
+                </label>
+                <p class="font-monospace small bg-light p-2 rounded">{{selectedPix.endToEndId}}</p>
+            </div> -->
+
+            <!-- <div class="col-md-6">
+                <label class="form-label text-muted small mb-1">
+                    <i class="bi bi-clock-history me-1"></i>
+                    Criado em
+                </label>
+                <p class="fw-semibold">{{formatarData(selectedPix.createdAt)}}</p>
+            </div> -->
+
+            <!-- <div class="col-md-6">
+                <label class="form-label text-muted small mb-1">
+                    <i class="bi bi-arrow-repeat me-1"></i>
+                    Última Sincronização
+                </label>
+                <p class="fw-semibold">{{formatarData(selectedPix.last_sync)}}</p>
+            </div> -->
+
+            <!-- Formulário de Processamento -->
+            <div class="col-12 mt-4">
+                <h6 class="border-bottom pb-2 mb-3">
+                    <i class="bi bi-list-check me-2"></i>
+                    Processamento do Recebimento
+                </h6>
+                
+                <!-- Barra de Progresso -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <small class="text-muted">Progresso geral</small>
+                        <small class="fw-bold">{{getStepsProgress()}}%</small>
+                    </div>
+                    <div class="progress" style="height: 10px;">
+                        <div 
+                            class="progress-bar" 
+                            [class.bg-success]="getStepsProgress() === 100"
+                            [class.bg-warning]="getStepsProgress() > 0 && getStepsProgress() < 100"
+                            [class.bg-secondary]="getStepsProgress() === 0"
+                            role="progressbar" 
+                            [style.width.%]="getStepsProgress()"
+                            [attr.aria-valuenow]="getStepsProgress()" 
+                            aria-valuemin="0" 
+                            aria-valuemax="100">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulário -->
+                <form [formGroup]="stepsForm" *ngIf="stepsForm">
+                    <div class="row g-3">
+                        
+                        <!-- 1. Classificação -->
+                        <div class="col-12">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <label class="form-label fw-semibold mb-3">
+                                        <i class="bi bi-tags-fill me-2 text-primary"></i>
+                                        1. Classificação
+                                        <span class="badge bg-success ms-2" *ngIf="stepsForm.get('classificacao')?.value">
+                                            <i class="bi bi-check-circle-fill"></i>
+                                        </span>
+                                    </label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <div class="form-check form-check-card">
+                                                <div 
+                                                    class="p-3 border rounded text-center clickable-card"
+                                                    [class.selected]="stepsForm.get('classificacao')?.value === 'VENDA ATACADO'"
+                                                    (click)="onClassificacaoChange('VENDA ATACADO')">
+                                                    <i class="bi bi-box-seam fs-3 d-block mb-2"></i>
+                                                    <strong>Venda Atacado</strong>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="form-check form-check-card">
+                                                <div 
+                                                    class="p-3 border rounded text-center clickable-card"
+                                                    [class.selected]="stepsForm.get('classificacao')?.value === 'VENDA VAREJO'"
+                                                    (click)="onClassificacaoChange('VENDA VAREJO')">
+                                                    <i class="bi bi-cart-fill fs-3 d-block mb-2"></i>
+                                                    <strong>Venda Varejo</strong>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Data do Caixa -->
+                        <div class="col-12">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <label class="form-label fw-semibold mb-3">
+                                        <i class="bi bi-calendar-check-fill me-2 text-primary"></i>
+                                        2. Data do Caixa
+                                        <span class="badge bg-success ms-2" *ngIf="stepsForm.get('data_caixa')?.value">
+                                            <i class="bi bi-check-circle-fill"></i>
+                                        </span>
+                                    </label>
+                                    <input 
+                                        type="date" 
+                                        class="form-control form-control-lg" 
+                                        formControlName="data_caixa"
+                                        placeholder="Selecione a data">
+                                    <small class="text-muted mt-1 d-block">
+                                        Data em que o valor foi recebido no caixa
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Emissão de Documento Fiscal -->
+                        <div class="col-12">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <label class="form-label fw-semibold mb-3">
+                                        <i class="bi bi-receipt-cutoff me-2 text-primary"></i>
+                                        3. Emissão de Documento Fiscal
+                                        <span class="badge bg-success ms-2" *ngIf="stepsForm.get('cupom_fiscal_emitido')?.value || stepsForm.get('nota_fiscal_emitida')?.value">
+                                            <i class="bi bi-check-circle-fill"></i>
+                                        </span>
+                                    </label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <div class="form-check form-check-card">
+                                                <div 
+                                                    class="p-3 border rounded text-center clickable-card"
+                                                    [class.selected]="stepsForm.get('cupom_fiscal_emitido')?.value"
+                                                    (click)="onTipoDocumentoChange('cupom')">
+                                                    <i class="bi bi-receipt fs-3 d-block mb-2"></i>
+                                                    <strong>Cupom Fiscal</strong>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="form-check form-check-card">
+                                                <div 
+                                                    class="p-3 border rounded text-center clickable-card"
+                                                    [class.selected]="stepsForm.get('nota_fiscal_emitida')?.value"
+                                                    (click)="onTipoDocumentoChange('nota')">
+                                                    <i class="bi bi-file-earmark-text fs-3 d-block mb-2"></i>
+                                                    <strong>Nota Fiscal</strong>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Baixa no Sistema -->
+                        <div class="col-12">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <div class="form-check form-switch">
+                                        <input 
+                                            class="form-check-input" 
+                                            type="checkbox" 
+                                            formControlName="nota_baixada_sistema"
+                                            id="baixada"
+                                            style="width: 3rem; height: 1.5rem;">
+                                        <label class="form-check-label ms-2 fw-semibold" for="baixada">
+                                            <i class="bi bi-database-fill-check me-2 text-primary"></i>
+                                            4. Baixa no Sistema
+                                            <span class="badge bg-success ms-2" *ngIf="stepsForm.get('nota_baixada_sistema')?.value">
+                                                <i class="bi bi-check-circle-fill"></i>
+                                            </span>
+                                        </label>
+                                    </div>
+                                    <small class="text-muted mt-2 d-block ms-5">
+                                        Marque quando a nota já estiver baixada no sistema
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botão Salvar -->
+                        <div class="col-12 mt-3">
+                            <button 
+                                type="button" 
+                                class="btn btn-primary btn-lg w-100"
+                                (click)="saveSteps()"
+                                [disabled]="savingStep">
+                                <span *ngIf="!savingStep">
+                                    <i class="bi bi-save me-2"></i>
+                                    Salvar Informações
+                                </span>
+                                <span *ngIf="savingStep">
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                    Salvando...
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Devoluções -->
+            <div class="col-12 mt-4" *ngIf="selectedPix.devolucoes && selectedPix.devolucoes.length > 0">
+                <h6 class="border-bottom pb-2 mb-3">
+                    <i class="bi bi-arrow-counterclockwise me-2"></i>
+                    Devoluções
+                </h6>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Esta transação possui {{selectedPix.devolucoes.length}} devolução(ões)
+                </div>
+            </div>
+
+            <div class="col-12 mt-3" *ngIf="!selectedPix.devolucoes || selectedPix.devolucoes.length === 0">
+                <div class="alert alert-success mb-0">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    Nenhuma devolução registrada para esta transação
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">
+            <i class="bi bi-x-circle me-1"></i>
+            Fechar
+        </button>
+    </div>
+</ng-template>

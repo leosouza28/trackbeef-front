@@ -1,0 +1,6 @@
+<div class="carrinho-float shadow-lg" [ngClass]="{ 'pulse-glow': valorTotal > 0 }" (click)="irParaCheckout()" *ngIf="hasCarrinho">
+    <div class="carrinho-conteudo">
+        <span> <i class="bi bi-ticket-detailed me-2"></i> {{ labelIngressos }}</span>
+        <strong class="ms-2">R$ {{ valorTotal | moneyBrl }}</strong>
+    </div>
+</div>

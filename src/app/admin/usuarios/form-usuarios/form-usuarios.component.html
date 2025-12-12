@@ -1,0 +1,292 @@
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="fw-bold ">{{form['controls']['_id']['value'] ? 'Editar usuário' : 'Adicionar usuário'}}
+            </h1>
+            <p class="text-muted ">{{form['controls']['_id']['value'] ? 'usuários > editar usuário' : 'usuários
+                > adicionar usuário'}} </p>
+        </div>
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <p class="text-muted  px-3 pt-3">Os campos com * são obrigatórios</p>
+                <form [formGroup]="form" (ngSubmit)="onSubmit()" class="px-3 pb-3">
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <label for="niveis-usuario" class="form-label fw-bold">Nivel de usuário</label>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex flex-row gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="nivel_cliente"
+                                        formControlName="nivel_cliente">
+                                    <label class="form-check-label" for="nivel_cliente">Cliente</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="nivel_admin"
+                                        formControlName="nivel_admin">
+                                    <label class="form-check-label" for="nivel_admin">Administrativo</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="nivel_vendedor"
+                                        formControlName="nivel_vendedor">
+                                    <label class="form-check-label" for="nivel_vendedor">Vendedor</label>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="col-12">
+                            <label for="dados-pessoais" class="form-label fw-bold">Dados pessoais</label>
+                        </div>
+                        <!-- Documento -->
+                        <div class="col-12 col-md-4">
+                            <div class="form-floating">
+                                <input type="documento" class="form-control" id="documento" formControlName="documento"
+                                    placeholder="Documento" mask="000.000.000-00">
+                                <label for="documento">Documento (CPF) *</label>
+                            </div>
+                        </div>
+
+                        <!-- Nome -->
+                        <div class="col-12 col-md-8">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="nome" formControlName="nome"
+                                    placeholder="Nome">
+                                <label for="nome">Nome *</label>
+                            </div>
+                        </div>
+
+                        <!-- Senha -->
+                        <div class="col-12 col-md-4">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="username" formControlName="username"
+                                    placeholder="Senha">
+                                <label for="senha">Nome de Usuário *</label>
+                            </div>
+                        </div>
+                        <!-- Senha -->
+                        <div class="col-12 col-md-4">
+                            <div class="form-floating">
+                                <input type="password" class="form-control" id="senha" formControlName="senha"
+                                    placeholder="Senha">
+                                <label for="senha">Senha *</label>
+                            </div>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="col-12 col-md-4">
+                            <div class="form-floating">
+                                <input type="email" class="form-control" id="email" formControlName="email"
+                                    placeholder="Email">
+                                <label for="email">Email</label>
+                            </div>
+                        </div>
+
+
+                        <!-- Data de Nascimento -->
+                        <div class="col-12 col-md-4">
+                            <div class="form-floating">
+                                <input type="date" class="form-control" id="data_nascimento"
+                                    formControlName="data_nascimento" placeholder="Data de Nascimento">
+                                <label for="data_nascimento">Data de Nascimento</label>
+                            </div>
+                        </div>
+
+                        <!-- Sexo -->
+                        <div class="col-12 col-md-4">
+                            <div class="form-floating">
+                                <select class="form-select" id="sexo" formControlName="sexo">
+                                    <option value="" disabled>Selecione</option>
+                                    <option value="NAO INFORMADO">Não informado</option>
+                                    <option value="MASCULINO">Masculino</option>
+                                    <option value="FEMININO">Feminino</option>
+                                </select>
+                                <label for="sexo">Sexo</label>
+                            </div>
+                        </div>
+
+                        <!-- Status -->
+                        <div class="col-12 col-md-4">
+                            <div class="form-floating">
+                                <select class="form-select" id="status" formControlName="status">
+                                    <option value="" disabled>Selecione</option>
+                                    <option *ngFor="let status of status_options" [value]="status">{{ status }}</option>
+                                </select>
+                                <label for="status">Status *</label>
+                            </div>
+                        </div>
+
+                        <!-- Telefones -->
+                        <div class="col-12">
+                            <label for="telefones" class="form-label fw-bold">Telefones</label>
+                            <div formArrayName="telefones">
+                                <div *ngFor="let telefone of telefonesArray.controls; let i = index" [formGroupName]="i"
+                                    class="row mb-2 g-2">
+                                    <div class="col-4">
+                                        <select class="form-control" placeholder="Tipo" formControlName="tipo">
+                                            <option value="" disabled>Selecione</option>
+                                            <option value="CELULAR">Celular</option>
+                                            <option value="CEL_WHATSAPP">Cel + WhatsApp</option>
+                                            <option value="APENAS_WHATSAPP">Apenas WhatsApp</option>
+                                            <option value="TEL_FIXO">Tel. Fixo</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-4">
+                                        <input type="text" class="form-control" placeholder="Número"
+                                            formControlName="valor"
+                                            [mask]="telefone.value.tipo === 'TEL_FIXO' ? '(00) 0000-0000' : '(00) 00000-0000'">
+                                    </div>
+                                    <div class="col-2">
+                                        <input type="checkbox" formControlName="principal"> Principal
+                                    </div>
+                                    <div class="col-2">
+                                        <button type="button" class="btn btn-danger"
+                                            (click)="removeTelefone(i)">Remover</button>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-primary" (click)="addTelefone()">Adicionar
+                                    Telefone</button>
+                            </div>
+                        </div>
+                        <!-- Endereços -->
+                        <div class="col-12">
+                            <label for="telefones" class="form-label fw-bold">Endereço</label>
+                            <div formGroupName="endereco" class="row g-2">
+                                <!-- CEP -->
+                                <div class="col-12 col-md-3">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="cep" formControlName="cep"
+                                            placeholder="CEP" mask="00000-000" (keyup)="getConsultaCEP()">
+                                        <label for="cep">CEP *</label>
+                                    </div>
+                                </div>
+
+                                <!-- Logradouro -->
+                                <div class="col-12 col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="logradouro"
+                                            formControlName="logradouro" placeholder="Logradouro">
+                                        <label for="logradouro">Logradouro *</label>
+                                    </div>
+                                </div>
+
+                                <!-- Número -->
+                                <div class="col-12 col-md-3">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="numero" formControlName="numero"
+                                            placeholder="Número">
+                                        <label for="numero">Número *</label>
+                                    </div>
+                                </div>
+
+                                <!-- Complemento -->
+                                <div class="col-12 col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="complemento"
+                                            formControlName="complemento" placeholder="Complemento">
+                                        <label for="complemento">Complemento</label>
+                                    </div>
+                                </div>
+
+                                <!-- Bairro -->
+                                <div class="col-12 col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="bairro" formControlName="bairro"
+                                            placeholder="Bairro">
+                                        <label for="bairro">Bairro *</label>
+                                    </div>
+                                </div>
+
+
+                                <!-- Estado -->
+                                <div class="col-12 col-md-6">
+                                    <div class="form-floating">
+                                        <select class="form-select" id="estado" formControlName="estado">
+                                            <option value="" disabled>{{loading_estados ? 'Carregando...' :
+                                                'Selecione'}}</option>
+                                            <option *ngFor="let estado of estados_options" [value]="estado.sigla">
+                                                {{estado.sigla}}
+                                            </option>
+                                        </select>
+                                        <label for="estado">Estado *</label>
+                                    </div>
+                                </div>
+
+                                <!-- Cidade -->
+                                <div class="col-12 col-md-6">
+                                    <div class="form-floating">
+                                        <select class="form-select" id="cidade" formControlName="cidade">
+                                            <option value="" disabled>{{loading_cidades ? 'Carregando...' :
+                                                'Selecione'}}</option>
+                                            <option *ngFor="let cidade of cidades_options" [value]="cidade.nome">
+                                                {{ cidade.nome }}
+                                            </option>
+                                        </select>
+                                        <label for="cidade">Cidade *</label>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <ng-container *ngIf="isNivelAdmin">
+                            <div class="col-12">
+                                <label for="dados-acesso" class="form-label fw-bold ">Dados de acesso</label>
+                            </div>
+                            <div class="col-12 text-uppercase mb-2">
+                                <ng-container *ngFor="let secao of permissoes; let i = index">
+                                    <div class="bg-primary text-white  {{ i == 0 ? 'rounded-top' : '' }}  p-2 text-center">
+                                        <p class="mb-0 fw-bold fs-6">{{secao.secao}}</p>
+                                    </div>
+                                    <div class="d-flex flex-column">
+                                        <div class="form-check" *ngFor="let scope of secao.permissoes"
+                                            class="border-bottom border-start border-end px-3 py-1">
+                                            <input class="form-check-input me-3" type="checkbox" [id]="scope.key"
+                                                [checked]="temScope(scope.key)" [disabled]="form['controls']['scopes']['disabled']"
+                                                (change)="toggleScope($event, scope.key)">
+                                            <label class="form-check-label" [for]="scope.key">
+                                                {{ scope.description }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                </ng-container>
+                            </div>
+                        </ng-container>
+
+                        <!-- Botão de Enviar -->
+                        <div class="col-12 ">
+                            <button type="submit" class="btn btn-success" [disabled]="form.invalid">
+                                <text-spinner [loading]="loading">Salvar</text-spinner>
+                            </button>
+                            <button type="button" class="btn btn-danger ms-2" (click)="back()">Cancelar</button>
+                        </div>
+                    </div>
+                </form>
+                <div class="card-footer" *ngIf="!!user_data?._id">
+                    <div class="row">
+                        <div class="col-12 col-lg-4">
+                            <p class="text-muted fw-bold mb-0">Origem do cadastro</p>
+                            <p class="text-muted mb-0" *ngIf="!!user_data?.origem_cadastro">
+                                {{user_data?.origem_cadastro}}</p>
+                            <p class="text-muted mb-0" *ngIf="!user_data?.origem_cadastro">---</p>
+                        </div>
+                        <div class="col-12 col-lg-4">
+                            <p class="text-muted fw-bold mb-0">Criado por</p>
+                            <p class="text-muted mb-0" *ngIf="!!user_data?.criado_por?.data_hora">
+                                {{user_data?.criado_por?.usuario | userInfo}} em {{user_data?.criado_por?.data_hora |
+                                date: 'dd/MM/yy HH:mm'}}</p>
+                            <p class="text-muted mb-0" *ngIf="!user_data?.criado_por?.data_hora">---</p>
+                        </div>
+                        <div class="col-12 col-lg-4">
+                            <p class="text-muted fw-bold mb-0">Alterado por</p>
+                            <p class="text-muted mb-0" *ngIf="!!user_data?.atualizado_por?.data_hora">
+                                {{user_data?.atualizado_por?.usuario | userInfo}} em
+                                {{user_data?.atualizado_por?.data_hora | date: 'dd/MM/yy HH:mm'}}</p>
+                            <p class="text-muted mb-0" *ngIf="!user_data?.atualizado_por?.data_hora">---</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

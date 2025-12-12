@@ -1,0 +1,425 @@
+<div class="container-fluid">
+    <div class="row row-gap-3 mb-3">
+        <div class="col-12">
+            <h1 class="fw-bold mb-0">Consultar PIX</h1>
+            <p class="text-muted mb-0">pix > consultar pix</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <form [formGroup]="form" (submit)="query()" class="p-3">
+                    <div class="row row-gap-3 mb-2">
+                        <div class="col-12">
+                            <label for="form-label">Consultar</label>
+                        </div>
+                    </div>
+                    <div class="row row-gap-3 mb-3">
+                        <div class="col-12 col-lg-6">
+                            <input type="text" class="form-control" id="buscar-input" formControlName="q"
+                                placeholder="Buscar por TxID">
+                        </div>
+                    </div>
+                    <div class="row row-gap-3 mb-3">
+                        <div class="col-12 col-lg-3">
+                            <select class="form-select" formControlName="status">
+                                <option value="TODOS">Status</option>
+                                <option *ngFor="let item of status" [value]="item">{{item}}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-row gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search me-2"></i> Pesquisar
+                        </button>
+                        <button type="button" class="btn btn-success" (click)="openCreatePixModal(createPixModal)">
+                            <i class="bi bi-plus-circle me-2"></i>
+                            Criar Novo PIX
+                        </button>
+                        <button type="button" class="btn btn-info" (click)="openPixDetailsModal(pixDetailsModal)" *ngIf="pixCriado">
+                            <i class="bi bi-eye me-2"></i>
+                            Ver Último PIX
+                        </button>
+                    </div>
+                </form>
+                <div class="px-3 table-responsive">
+                    <table-template [total]="data.total" [loading]="loading" [paginacaoAtiva]="true">
+                        <table class="table table-borderless table-hover border-bottom">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Criado em</th>
+                                    <th>Expira em</th>
+                                    <th>TxID</th>
+                                    <th class="text-end">Valor</th>
+                                    <th class="text-end">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let item of data.lista" class="cursor-pointer" (click)="viewPixDetails(item, pixDetailsModal)">
+                                    <td>{{item.createdAt | date: 'dd/MM/yyyy HH:mm:ss'}}</td>
+                                    <td>{{item.expira_em | date: 'dd/MM HH:mm'}} ({{item.expira_em | dateFromNow}})</td>
+                                    <td>{{item.txid}}</td>
+                                    <td class="text-end">{{item.valor.original}}</td>
+                                    <td class="text-end">{{item.status}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </table-template>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Criar PIX -->
+<ng-template #createPixModal let-modal>
+    <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">
+            <i class="bi bi-qr-code me-2"></i>
+            Criar Novo PIX
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"></button>
+    </div>
+    <div class="modal-body" *ngIf="pixForm">
+        <form [formGroup]="pixForm">
+            <div class="row g-3">
+                <!-- Tipo de Documento -->
+                <div class="col-12">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-card-text me-1"></i>
+                        Tipo de Documento
+                    </label>
+                    <div class="btn-group w-100" role="group">
+                        <input 
+                            type="radio" 
+                            class="btn-check" 
+                            formControlName="tipo_documento"
+                            value="cpf"
+                            id="tipo-cpf">
+                        <label class="btn btn-outline-primary" for="tipo-cpf">
+                            <i class="bi bi-person me-1"></i>
+                            CPF
+                        </label>
+                        
+                        <input 
+                            type="radio" 
+                            class="btn-check" 
+                            formControlName="tipo_documento"
+                            value="cnpj"
+                            id="tipo-cnpj">
+                        <label class="btn btn-outline-primary" for="tipo-cnpj">
+                            <i class="bi bi-building me-1"></i>
+                            CNPJ
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Nome do Cliente -->
+                <div class="col-12">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-person-fill me-1"></i>
+                        Nome do Cliente
+                        <small class="text-muted">(opcional)</small>
+                    </label>
+                    <input 
+                        type="text" 
+                        class="form-control" 
+                        formControlName="nome_cliente"
+                        placeholder="Digite o nome do cliente">
+                </div>
+
+                <!-- Documento do Cliente -->
+                <div class="col-12">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-card-heading me-1"></i>
+                        {{pixForm.get('tipo_documento')?.value === 'cpf' ? 'CPF' : 'CNPJ'}} do Cliente
+                        <small class="text-muted">(opcional)</small>
+                    </label>
+                    <input 
+                        type="text" 
+                        class="form-control" 
+                        formControlName="documento_cliente"
+                        mask="{{pixForm.get('tipo_documento')?.value === 'cpf' ? '000.000.000-00' : '00.000.000/0000-00'}}"
+                        [placeholder]="'Digite o ' + (pixForm.get('tipo_documento')?.value === 'cpf' ? 'CPF' : 'CNPJ')">
+                </div>
+
+                <!-- Valor -->
+                <div class="col-12">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-currency-dollar me-1"></i>
+                        Valor
+                        <span class="text-danger">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        class="form-control" 
+                        formControlName="valor"
+                        currencyMask
+                        [options]="{ prefix: 'R$ ', thousands: '.', decimal: ',', align: 'left' }"
+                        placeholder="R$ 0,00">
+                    <div class="invalid-feedback d-block" *ngIf="pixForm.get('valor')?.invalid && pixForm.get('valor')?.touched">
+                        Valor é obrigatório e deve ser maior que zero
+                    </div>
+                </div>
+
+                <!-- Tempo de Expiração -->
+                <div class="col-12">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-clock me-1"></i>
+                        Tempo de Expiração
+                        <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group">
+                        <input 
+                            type="number" 
+                            class="form-control" 
+                            formControlName="expiracao_segundos"
+                            min="60"
+                            max="86400"
+                            placeholder="3600">
+                        <span class="input-group-text">segundos</span>
+                    </div>
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Mínimo: 60s (1 min) | Máximo: 86400s (24h) | Padrão: 3600s (1h)
+                    </small>
+                    <div class="invalid-feedback d-block" *ngIf="pixForm.get('expiracao_segundos')?.invalid && pixForm.get('expiracao_segundos')?.touched">
+                        Tempo deve ser entre 60 e 86400 segundos
+                    </div>
+                </div>
+
+                <!-- Descrição -->
+                <div class="col-12">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-text-left me-1"></i>
+                        Descrição
+                        <small class="text-muted">(opcional)</small>
+                    </label>
+                    <textarea 
+                        class="form-control" 
+                        formControlName="descricao"
+                        rows="2"
+                        maxlength="140"
+                        placeholder="Digite uma breve descrição para o PIX..."></textarea>
+                    <small class="text-muted d-flex justify-content-between">
+                        <span>
+                            <i class="bi bi-info-circle me-1"></i>
+                            Máximo de 140 caracteres
+                        </span>
+                        <span [class.text-danger]="(pixForm.get('descricao')?.value?.length || 0) > 140">
+                            {{ pixForm.get('descricao')?.value?.length || 0 }}/140
+                        </span>
+                    </small>
+                    <div class="invalid-feedback d-block" *ngIf="pixForm.get('descricao')?.invalid && pixForm.get('descricao')?.touched">
+                        Descrição não pode ter mais de 140 caracteres
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <small>
+                            Após criar o PIX, um QR Code será gerado para o pagamento.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">
+            <i class="bi bi-x-circle me-1"></i>
+            Cancelar
+        </button>
+        <button 
+            type="button" 
+            class="btn btn-success"
+            (click)="createPix()"
+            [disabled]="pixForm?.invalid || creatingPix">
+            <span *ngIf="!creatingPix">
+                <i class="bi bi-check-circle me-1"></i>
+                Criar PIX
+            </span>
+            <span *ngIf="creatingPix">
+                <span class="spinner-border spinner-border-sm me-1"></span>
+                Criando...
+            </span>
+        </button>
+    </div>
+</ng-template>
+
+<!-- Modal de Detalhes do PIX -->
+<ng-template #pixDetailsModal let-modal>
+    <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">
+            <i class="bi bi-check-circle me-2"></i>
+            PIX Gerado com Sucesso
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"></button>
+    </div>
+    <div class="modal-body" *ngIf="pixCriado">
+        <div class="row g-3">
+            <!-- Status e Informações Básicas -->
+            <div class="col-12">
+                <div class="card border-success">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="mb-1">
+                                    <i class="bi bi-info-circle text-success me-2"></i>
+                                    Status
+                                </h6>
+                                <span class="badge bg-success fs-6">{{ pixCriado.status }}</span>
+                            </div>
+                            <div class="text-end">
+                                <h6 class="mb-1">Valor</h6>
+                                <h4 class="mb-0 text-success">R$ {{ pixCriado.valor?.original }}</h4>
+                            </div>
+                        </div>
+                        
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <small class="text-muted d-block">Transaction ID</small>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control font-monospace" [value]="pixCriado.txid" readonly>
+                                    <button class="btn btn-outline-secondary" type="button" (click)="copiarTexto(pixCriado.txid)">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <small class="text-muted d-block">Criado em</small>
+                                <strong>{{ formatarData(pixCriado.calendario.criacao) }}</strong>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <small class="text-muted d-block">Expira em</small>
+                                <strong class="text-danger">{{ formatarData(pixCriado.expira_em) }}</strong>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <small class="text-muted d-block">Tempo de Expiração</small>
+                                <strong>{{ pixCriado.calendario.expiracao }}s</strong>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <small class="text-muted d-block">Gateway</small>
+                                <strong>{{ pixCriado.gateway }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QR Code -->
+            <div class="col-12">
+                <div class="card border-primary">
+                    <div class="card-body text-center">
+                        <h6 class="mb-3">
+                            <i class="bi bi-qr-code text-primary me-2"></i>
+                            QR Code para Pagamento
+                        </h6>
+                        <div class="d-flex justify-content-center mb-3">
+                            <qrcode 
+                                [qrdata]="pixCriado.brcode" 
+                                [width]="256" 
+                                [errorCorrectionLevel]="'M'"
+                                [elementType]="'canvas'"
+                                [cssClass]="'qr-code-canvas'">
+                            </qrcode>
+                        </div>
+                        <div class="alert alert-info mb-0">
+                            <small>
+                                <i class="bi bi-camera me-1"></i>
+                                Aponte a câmera do seu celular para o QR Code acima ou use o PIX Copia e Cola abaixo
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Devedor -->
+            <div class="col-12" *ngIf="pixCriado.devedor">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="mb-2">
+                            <i class="bi bi-person text-primary me-2"></i>
+                            Devedor
+                        </h6>
+                        <p class="mb-1"><strong>Nome:</strong> {{ pixCriado.devedor.nome }}</p>
+                        <p class="mb-0" *ngIf="pixCriado.devedor.cpf"><strong>CPF:</strong> {{ pixCriado.devedor.cpf }}</p>
+                        <p class="mb-0" *ngIf="pixCriado.devedor.cnpj"><strong>CNPJ:</strong> {{ pixCriado.devedor.cnpj }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Solicitação do Pagador -->
+            <div class="col-12" *ngIf="pixCriado.solicitacaoPagador">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="mb-2">
+                            <i class="bi bi-chat-left-text text-info me-2"></i>
+                            Descrição
+                        </h6>
+                        <p class="mb-0">{{ pixCriado.solicitacaoPagador }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chave PIX -->
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="mb-2">
+                            <i class="bi bi-key text-warning me-2"></i>
+                            Chave PIX
+                        </h6>
+                        <div class="input-group">
+                            <input type="text" class="form-control font-monospace" [value]="pixCriado.chave" readonly>
+                            <button class="btn btn-outline-secondary" type="button" (click)="copiarTexto(pixCriado.chave)">
+                                <i class="bi bi-clipboard"></i>
+                                Copiar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BR Code (PIX Copia e Cola) -->
+            <div class="col-12">
+                <div class="card border-primary">
+                    <div class="card-body">
+                        <h6 class="mb-2">
+                            <i class="bi bi-qr-code text-primary me-2"></i>
+                            PIX Copia e Cola
+                        </h6>
+                        <div class="alert alert-info mb-2">
+                            <small>
+                                <i class="bi bi-info-circle me-1"></i>
+                                Copie o código abaixo e cole no app do seu banco para efetuar o pagamento
+                            </small>
+                        </div>
+                        <div class="input-group">
+                            <textarea class="form-control font-monospace" rows="3" [value]="pixCriado.brcode" readonly></textarea>
+                            <button class="btn btn-primary" type="button" (click)="copiarTexto(pixCriado.brcode)">
+                                <i class="bi bi-clipboard"></i>
+                                Copiar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">
+            <i class="bi bi-x-circle me-1"></i>
+            Fechar
+        </button>
+        <button type="button" class="btn btn-primary" (click)="copiarTexto(pixCriado.brcode)">
+            <i class="bi bi-clipboard me-1"></i>
+            Copiar PIX Copia e Cola
+        </button>
+    </div>
+</ng-template>
