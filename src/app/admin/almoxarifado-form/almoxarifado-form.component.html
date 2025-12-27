@@ -1,0 +1,66 @@
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="fw-bold ">{{form['controls']['_id']['value'] ? 'Editar Almoxarifado' : 'Adicionar Almoxarifado'}}
+            </h1>
+        </div>
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <p class="text-muted px-3 pt-3">Os campos com * são obrigatórios</p>
+                <form [formGroup]="form" (ngSubmit)="onSubmit()" class="px-3 pb-3">
+                    <div class="row g-3">
+                        <!-- Nome do Perfil -->
+                        <div class="col-12 col-lg-6">
+                            <label for="nome" class="form-label">Nome do Almoxarifado *</label>
+                            <input type="text" class="form-control" id="nome" formControlName="nome"
+                                placeholder="Ex: Principal">
+                            <div class="text-danger small mt-1"
+                                *ngIf="form.get('nome')?.invalid && form.get('nome')?.touched">
+                                O nome do almoxarifado é obrigatório
+                            </div>
+                        </div>
+                        <!-- checkbox para 'principal' -->
+                        <div class="col-12 col-lg-6">
+                            <label for="principal" class="form-label d-block">Almoxarifado Principal</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="principal"
+                                    formControlName="principal">
+                                <label class="form-check-label" for="principal">
+                                    Definir como almoxarifado principal
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Botões -->
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-success" [disabled]="form.invalid || loading">
+                                <text-spinner [loading]="loading">Salvar</text-spinner>
+                            </button>
+                            <button type="button" class="btn btn-danger ms-2" (click)="back()"
+                                [disabled]="loading">Cancelar</button>
+                        </div>
+                    </div>
+                </form>
+                <div class="card-footer" *ngIf="!!almoxarifado_data?._id">
+                    <div class="row">
+                        <div class="col-12 col-lg-6">
+                            <p class="text-muted fw-bold mb-0">Criado por</p>
+                            <p class="text-muted mb-0" *ngIf="!!almoxarifado_data?.criado_por?.data_hora">
+                                {{almoxarifado_data?.criado_por?.usuario | userInfo}}
+                                {{almoxarifado_data?.criado_por?.data_hora |
+                                dateFromNow}}</p>
+                            <p class="text-muted mb-0" *ngIf="!almoxarifado_data?.criado_por?.data_hora">---</p>
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            <p class="text-muted fw-bold mb-0">Alterado por</p>
+                            <p class="text-muted mb-0" *ngIf="!!almoxarifado_data?.atualizado_por?.data_hora">
+                                {{almoxarifado_data?.atualizado_por?.usuario | userInfo}}
+                                {{almoxarifado_data?.atualizado_por?.data_hora | dateFromNow}}</p>
+                            <p class="text-muted mb-0" *ngIf="!almoxarifado_data?.atualizado_por?.data_hora">---</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

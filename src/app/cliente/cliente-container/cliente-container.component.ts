@@ -10,14 +10,9 @@ import { SessaoService } from 'src/app/services/sessao.service';
 })
 export class ClienteContainerComponent implements OnInit {
 
-  constructor(
-    public sessao: SessaoService,
-    private router: Router,
-    private modalService: NgbModal
-  ) { }
+  constructor(public sessao: SessaoService) { }
 
   ngOnInit(): void {
-    this.sessao.getCarrinho();
   }
 
   click() {

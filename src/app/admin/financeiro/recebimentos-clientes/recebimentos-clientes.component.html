@@ -1,0 +1,535 @@
+<div class="container-fluid" style="padding-bottom: 6rem;">
+    <!-- Loading -->
+    <div *ngIf="loading" class="row">
+        <div class="col-12 text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+            <p class="mt-3 text-muted">Carregando dados...</p>
+        </div>
+    </div>
+
+    <!-- Conteúdo -->
+    <div *ngIf="!loading && painelData">
+        <!-- Cabeçalho com Botão Voltar -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-outline-secondary" (click)="voltarParaPainel()">
+                            <i class="bi bi-arrow-left"></i> Voltar
+                        </button>
+                        <h1 class="fw-bold mb-0">Detalhes de Recebimento</h1>
+                    </div>
+                    <button class="btn btn-primary" (click)="abrirModalCompartilhar(modalCompartilhar)" [disabled]="loading">
+                        <i class="bi bi-share me-2"></i>Compartilhar Conta
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informações do Cliente -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm ">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-12 col-md-8">
+                                <div class="d-flex align-items-center">
+                                    <div>
+                                        <h4 class="mb-1 fw-bold">{{painelData.pessoa.nome}}</h4>
+                                        <div class="text-muted">
+                                            <span class="me-3">
+                                                <i class="bi bi-card-text"></i> {{painelData.pessoa.documento |
+                                                cpfCnpj}}
+                                            </span>
+                                            <span *ngIf="painelData.pessoa.telefone_principal?.valor" class="me-3">
+                                                <i class="bi bi-telephone"></i>
+                                                {{painelData.pessoa.telefone_principal.valor | phone }}
+                                            </span>
+                                        </div>
+                                        <span *ngIf="painelData.pessoa.razao_social" class="badge bg-secondary mt-1">
+                                            {{painelData.pessoa.razao_social}}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-4 text-md-end mt-3 mt-md-0">
+                                <small class="text-muted d-block">Saldo Devedor</small>
+                                <h2 class="mb-0 fw-bold" [class.text-danger]="painelData.saldo_devedor > 0"
+                                    [class.text-success]="painelData.saldo_devedor <= 0">
+                                    {{painelData.saldo_devedor | moneyBrl}}
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cards de Métricas -->
+        <div class="row g-3 mb-4">
+            <!-- Valor Total -->
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                                    <i class="bi bi-cash-stack fs-2 text-info"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="text-muted mb-1 small">Valor Total</h6>
+                                <h4 class="mb-0 fw-bold text-info">{{painelData.valor_total | moneyBrl}}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Em Atraso -->
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="rounded-circle bg-danger bg-opacity-10 p-3">
+                                    <i class="bi bi-exclamation-triangle-fill fs-2 text-danger"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="text-muted mb-1 small">Em Atraso</h6>
+                                <h4 class="mb-0 fw-bold text-danger">{{painelData.valor_total_em_atraso | moneyBrl}}
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Em Aberto -->
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                                    <i class="bi bi-clock-history fs-2 text-warning"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="text-muted mb-1 small">Em Aberto</h6>
+                                <h4 class="mb-0 fw-bold text-warning">{{painelData.valor_total_em_aberto | moneyBrl}}
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- Valor Recebido -->
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                                    <i class="bi bi-check-circle-fill fs-2 text-success"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="text-muted mb-1 small">Recebido</h6>
+                                <h4 class="mb-0 fw-bold text-success">{{painelData.valor_recebido | moneyBrl}}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+
+        <!-- Lista de Vendas e Produtos -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-cart3"></i> Histórico de Vendas
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div *ngIf="vendas.length === 0" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-1"></i>
+                            <p class="mt-3">Nenhuma venda encontrada</p>
+                        </div>
+
+                        <div *ngIf="vendas.length > 0">
+                            <div *ngFor="let dataGroup of vendas; let last = last" class="border-bottom">
+                                <!-- Cabeçalho da Data (clicável para expandir/colapsar) -->
+                                <div class="px-3 py-3 border-bottom cursor-pointer hover-bg-light position-relative"
+                                    (click)="toggleGroup(dataGroup.dataKey)">
+                                    <!-- Barra lateral colorida -->
+                                    <div class="position-absolute top-0 start-0 h-100" 
+                                         style="width: 4px;"
+                                         [class.bg-danger]="dataGroup.status_quitacao === 'PENDENTE'"
+                                         [class.bg-warning]="dataGroup.status_quitacao === 'PARCIAL'"
+                                         [class.bg-success]="dataGroup.status_quitacao === 'QUITADA'">
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center" style="padding-left: 8px;">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <i class="bi text-muted" 
+                                               [class.bi-chevron-right]="!isGroupExpanded(dataGroup.dataKey)"
+                                               [class.bi-chevron-down]="isGroupExpanded(dataGroup.dataKey)">
+                                            </i>
+                                            <div>
+                                                <div class="fw-bold">{{dataGroup.data | dateSimple }}</div>
+                                                <div class="small text-muted">
+                                                    Total: <span class="text-dark">{{dataGroup.valor_total | moneyBrl}}</span>
+                                                    <span *ngIf="dataGroup.valor_em_aberto > 0" class="ms-2">
+                                                        • Falta: <span class="text-warning fw-bold">{{dataGroup.valor_em_aberto | moneyBrl}}</span>
+                                                    </span>
+                                                    <span *ngIf="dataGroup.valor_em_aberto <= 0" class="ms-2 text-success">
+                                                        • <i class="bi bi-check-circle-fill"></i> Quitado
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Lista de Itens (expansível) -->
+                                <div *ngIf="isGroupExpanded(dataGroup.dataKey)" class="border-top">
+                                    <!-- Cabeçalho das Colunas -->
+                                    <div class="d-flex px-3 py-2 bg-light border-bottom text-muted small fw-bold">
+                                        <div class="flex-grow-1">Produto</div>
+                                        <div class="text-end" style="width: 150px;">Quantidade</div>
+                                        <div class="text-end" style="width: 150px;">Total</div>
+                                    </div>
+
+                                    <!-- Cards que parecem linhas de tabela -->
+                                    <div *ngFor="let item of agruparItensPorProduto(dataGroup.produtos)"
+                                        class="px-3 py-2 border-bottom hover-bg">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-grow-1">
+                                                <strong>{{item.produto.nome}}<span *ngIf="item.pesos && item.pesos.length > 0"> ({{item.pesos.length}})</span></strong>
+                                            </div>
+                                            <div class="text-end text-muted" style="width: 150px;">
+                                                {{item.quantidade | number:'1.2-2':'pt-BR'}} {{item.produto.unidade}}
+                                            </div>
+                                            <div class="text-end fw-bold" style="width: 150px;">
+                                                {{item.valor_total | moneyBrl}}
+                                            </div>
+                                        </div>
+                                        <!-- Peças -->
+                                        <div *ngIf="item.pesos && item.pesos.length > 0" class="mt-1">
+                                            <small class="text-muted">
+                                                <span *ngFor="let peso of item.pesos; let last = last">{{peso}}&nbsp;</span>
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Recebimentos -->
+        <div class="row" *ngIf="painelData?.lista_recebimentos?.length">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-cash-coin"></i> Histórico de Recebimentos
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="px-3">Data</th>
+                                        <th>Forma de Pagamento</th>
+                                        <th class="text-end">Valor</th>
+                                        <th class="text-center" style="width: 80px;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let recebimento of painelData.lista_recebimentos" 
+                                        class="cursor-pointer"
+                                        (click)="abrirDetalhesRecebimento(recebimento, modalDetalhesRecebimento)">
+                                        <td>{{recebimento.data_pagamento | dateSimple}}</td>
+                                        <td>{{recebimento.forma_pagamento.nome}}</td>
+                                        <td class="text-end fw-bold text-success">{{recebimento.valor | moneyBrl}}</td>
+                                        <td class="text-center" (click)="$event.stopPropagation()">
+                                            <button class="btn btn-link btn-sm text-danger p-0" 
+                                                    (click)="abrirModalExclusao(recebimento, modalExcluirRecebimento)"
+                                                    title="Excluir recebimento">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botão Flutuante Adicionar Recebimento -->
+    <button *ngIf="!loading && painelData" class="btn btn-success btn-floating"
+        (click)="abrirModalLancamento(modalLancamento)" [disabled]="painelData.saldo_devedor <= 0"
+        [title]="painelData.saldo_devedor <= 0 ? 'Sem saldo devedor' : 'Adicionar Recebimento'">
+        <i class="bi bi-plus-lg fs-4"></i>
+    </button>
+</div>
+
+<!-- Modal Lançamento Recebimento -->
+<ng-template #modalLancamento let-modal>
+    <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">
+            <i class="bi bi-cash-coin me-2"></i>Adicionar Recebimento
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"
+            [disabled]="salvandoLancamento"></button>
+    </div>
+    <div class="modal-body">
+        <form [formGroup]="formLancamento">
+            <!-- Info do Cliente -->
+            <div class="alert alert-info mb-3" *ngIf="painelData">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Cliente:</strong> {{painelData.pessoa.nome}}
+                    </div>
+                    <div>
+                        <small class="text-muted">Saldo Devedor:</small>
+                        <strong class="text-danger ms-1">{{painelData.saldo_devedor | moneyBrl}}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data do Pagamento -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">Data do Pagamento <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" formControlName="data_pagamento"
+                    [class.is-invalid]="formLancamento.get('data_pagamento')?.invalid && formLancamento.get('data_pagamento')?.touched">
+                <div class="invalid-feedback">
+                    Data do pagamento é obrigatória
+                </div>
+            </div>
+
+            <!-- Forma de Pagamento -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">Forma de Pagamento <span class="text-danger">*</span></label>
+                <select class="form-select" formControlName="forma_pagamento_id"
+                    [class.is-invalid]="formLancamento.get('forma_pagamento_id')?.invalid && formLancamento.get('forma_pagamento_id')?.touched">
+                    <option value="">Selecione...</option>
+                    <option *ngFor="let forma of formasPagamento" [value]="forma._id">
+                        {{forma.nome}}
+                    </option>
+                </select>
+                <div class="invalid-feedback">
+                    Forma de pagamento é obrigatória
+                </div>
+            </div>
+
+            <!-- Valor -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">Valor <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text">R$</span>
+                    <input type="text" class="form-control" formControlName="valor" currencyMask
+                        [options]="{ prefix: '', thousands: '.', decimal: ',', align: 'right', allowNegative: false }"
+                        [max]="painelData?.saldo_devedor"
+                        [class.is-invalid]="formLancamento.get('valor')?.invalid && formLancamento.get('valor')?.touched">
+                    <div class="invalid-feedback">
+                        <span *ngIf="formLancamento.get('valor')?.hasError('required')">Valor é obrigatório</span>
+                        <span *ngIf="formLancamento.get('valor')?.hasError('min')">Valor mínimo é R$ 0,01</span>
+                        <span *ngIf="formLancamento.get('valor')?.hasError('max')">Valor não pode exceder o saldo
+                            devedor</span>
+                    </div>
+                </div>
+                <small class="text-muted">Valor máximo: {{painelData?.saldo_devedor | moneyBrl}}</small>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()" [disabled]="salvandoLancamento">
+            Cancelar
+        </button>
+        <button type="button" class="btn btn-success" (click)="salvarLancamento()"
+            [disabled]="formLancamento.invalid || salvandoLancamento">
+            <span *ngIf="salvandoLancamento" class="spinner-border spinner-border-sm me-2"></span>
+            <i *ngIf="!salvandoLancamento" class="bi bi-check-lg me-2"></i>
+            {{salvandoLancamento ? 'Salvando...' : 'Salvar Recebimento'}}
+        </button>
+    </div>
+</ng-template>
+
+<!-- Modal Excluir Recebimento -->
+<ng-template #modalExcluirRecebimento let-modal>
+    <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">
+            <i class="bi bi-exclamation-triangle me-2"></i>Confirmar Exclusão
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"
+            [disabled]="excluindoRecebimento"></button>
+    </div>
+    <div class="modal-body">
+        <p class="mb-3">Tem certeza que deseja excluir este recebimento?</p>
+        <div *ngIf="recebimentoParaExcluir" class="alert alert-warning mb-0">
+            <div><strong>Forma:</strong> {{recebimentoParaExcluir.forma_pagamento.nome}}</div>
+            <div><strong>Data:</strong> {{recebimentoParaExcluir.data_pagamento | dateSimple}}</div>
+            <div><strong>Valor:</strong> {{recebimentoParaExcluir.valor | moneyBrl}}</div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()" [disabled]="excluindoRecebimento">
+            Cancelar
+        </button>
+        <button type="button" class="btn btn-danger" (click)="confirmarExclusao()"
+            [disabled]="excluindoRecebimento">
+            <span *ngIf="excluindoRecebimento" class="spinner-border spinner-border-sm me-2"></span>
+            <i *ngIf="!excluindoRecebimento" class="bi bi-trash me-2"></i>
+            {{excluindoRecebimento ? 'Excluindo...' : 'Excluir'}}
+        </button>
+    </div>
+</ng-template>
+
+<!-- Modal Detalhes Recebimento -->
+<ng-template #modalDetalhesRecebimento let-modal>
+    <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">
+            <i class="bi bi-receipt me-2"></i>Detalhes do Recebimento
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"></button>
+    </div>
+    <div class="modal-body" *ngIf="recebimentoSelecionado">
+        <!-- Informações Principais -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card border-0 bg-light">
+                    <div class="card-body">
+                        <small class="text-muted d-block mb-1">Data do Pagamento</small>
+                        <h5 class="mb-0">{{recebimentoSelecionado.data_pagamento | dateSimple}}</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 bg-light">
+                    <div class="card-body">
+                        <small class="text-muted d-block mb-1">Forma de Pagamento</small>
+                        <h5 class="mb-0">{{recebimentoSelecionado.forma_pagamento.nome}}</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 bg-success bg-opacity-10">
+                    <div class="card-body text-center">
+                        <small class="text-muted d-block mb-1">Valor Total Recebido</small>
+                        <h2 class="mb-0 text-success fw-bold">{{recebimentoSelecionado.valor | moneyBrl}}</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lançamentos -->
+        <div *ngIf="recebimentoSelecionado.lancamentos?.length">
+            <h6 class="fw-bold mb-3">
+                <i class="bi bi-list-check me-2"></i>Distribuição do Recebimento
+            </h6>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Venda</th>
+                            <th>Data</th>
+                            <th class="text-end">Valor Aplicado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let lancamento of recebimentoSelecionado.lancamentos">
+                            <td>
+                                <span class="badge bg-primary">{{lancamento.venda.codigo}}</span>
+                            </td>
+                            <td>{{lancamento.venda.data | dateSimple}}</td>
+                            <td class="text-end fw-bold">{{lancamento.valor | moneyBrl}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Informações Adicionais -->
+        <div class="mt-4 pt-3 border-top">
+            <div class="row">
+                <div class="col-6">
+                    <small class="text-muted d-block">Criado em</small>
+                    <small>{{recebimentoSelecionado.createdAt | date: 'dd/MM/yyyy HH:mm'}}</small>
+                </div>
+                <div class="col-6 text-end">
+                    <small class="text-muted d-block">Atualizado em</small>
+                    <small>{{recebimentoSelecionado.updatedAt | date: 'dd/MM/yyyy HH:mm'}}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">
+            Fechar
+        </button>
+    </div>
+</ng-template>
+
+<!-- Modal Compartilhar Conta -->
+<ng-template #modalCompartilhar let-modal>
+    <div class="modal-header">
+        <h5 class="modal-title">
+            <i class="bi bi-share me-2"></i>Compartilhar Conta
+        </h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+    </div>
+    <div class="modal-body">
+        <p class="text-muted mb-3">Escolha o formato para compartilhar a conta:</p>
+        <div class="d-grid gap-2">
+            <button class="btn btn-lg btn-outline-danger d-flex align-items-center justify-content-center"
+                    (click)="compartilharConta('pdf')"
+                    [disabled]="processandoCompartilhamento">
+                <i class="bi bi-file-pdf fs-4 me-3"></i>
+                <div class="text-start">
+                    <div class="fw-bold">PDF</div>
+                    <small class="text-muted">Documento em formato PDF</small>
+                </div>
+            </button>
+            <button class="btn btn-lg btn-outline-primary d-flex align-items-center justify-content-center"
+                    (click)="compartilharConta('imagem')"
+                    [disabled]="processandoCompartilhamento">
+                <i class="bi bi-image fs-4 me-3"></i>
+                <div class="text-start">
+                    <div class="fw-bold">Imagem</div>
+                    <small class="text-muted">Imagem PNG de alta qualidade</small>
+                </div>
+            </button>
+        </div>
+        <div *ngIf="processandoCompartilhamento" class="text-center mt-3">
+            <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+            <span>Gerando {{formatoCompartilhamento}}...</span>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()" [disabled]="processandoCompartilhamento">
+            Cancelar
+        </button>
+    </div>
+</ng-template>

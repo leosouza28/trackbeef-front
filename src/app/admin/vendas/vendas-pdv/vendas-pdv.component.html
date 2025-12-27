@@ -1,0 +1,1026 @@
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="fw-bold mb-0">Gerar Venda</h1>
+                <app-help-button helpKey="vendas-pdv" size="md"></app-help-button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dados da Venda -->
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Dados da Venda</h5>
+                </div>
+                <div class="card-body">
+                    <form [formGroup]="formPedido">
+                        <div class="row g-3">
+                            <div class="col-12 col-md-3">
+                                <label for="data_pedido" class="form-label fw-bold">Data da Venda *</label>
+                                <input type="date" class="form-control" id="data_pedido" formControlName="data"
+                                    (keyup.enter)="openCliente()" autofocus>
+                            </div>
+
+                            <!-- Cliente -->
+                            <div class="col-12 col-md-9">
+                                <label class="form-label fw-bold">Cliente</label>
+                                <div class="card border" [class.border-success]="clienteSelecionado"
+                                    style="cursor: pointer;" (click)="abrirListaClientes()">
+                                    <div class="card-body py-2">
+                                        <div *ngIf="!clienteSelecionado" class="text-muted">
+                                            <i class="bi bi-person-plus"></i> Clique para selecionar um cliente
+                                            (opcional)
+                                        </div>
+                                        <div *ngIf="clienteSelecionado">
+                                            <strong>{{clienteSelecionado.nome}}</strong>
+                                            <br>
+                                            <small class="text-muted">{{clienteSelecionado.documento}}</small>
+                                            <button type="button" class="btn btn-sm btn-outline-danger float-end"
+                                                (click)="limparCliente(); $event.stopPropagation()">
+                                                <i class="bi bi-x"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Endereço de Entrega -->
+                        <div class="row g-3 mt-2">
+                            <div class="col-12">
+                                <label class="form-label fw-bold">Endereço de Entrega (Opcional)</label>
+
+                                <!-- Sem endereço -->
+                                <div *ngIf="!temEndereco()">
+                                    <button type="button" class="btn btn-outline-secondary w-100"
+                                        (click)="abrirModalEndereco()">
+                                        <i class="bi bi-plus-circle"></i> Informar Endereço de Entrega
+                                    </button>
+                                </div>
+
+                                <!-- Com endereço -->
+                                <div *ngIf="temEndereco()" class="card border border-success">
+                                    <div class="card-body p-2">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="flex-grow-1">
+                                                <div class="mb-1">
+                                                    <strong>{{formPedido.value.endereco_entrega.logradouro}},
+                                                        {{formPedido.value.endereco_entrega.numero}}</strong>
+                                                    <span *ngIf="formPedido.value.endereco_entrega.complemento">
+                                                        - {{formPedido.value.endereco_entrega.complemento}}
+                                                    </span>
+                                                </div>
+                                                <div class="text-muted" style="font-size: 0.85rem;">
+                                                    {{formPedido.value.endereco_entrega.bairro}} -
+                                                    {{formPedido.value.endereco_entrega.cidade}}/{{formPedido.value.endereco_entrega.estado}}
+                                                    <span *ngIf="formPedido.value.endereco_entrega.cep">
+                                                        - CEP: {{formPedido.value.endereco_entrega.cep}}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="ms-2">
+                                                <button type="button" class="btn btn-sm btn-outline-primary me-1"
+                                                    (click)="abrirModalEndereco()">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    (click)="limparEndereco()">
+                                                    <i class="bi bi-x"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seleção de Produtos -->
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card border-0 shadow" *ngIf="!produtoSelecionado">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Adicionar Produto</h5>
+                </div>
+                <div class="card-body">
+                    <button type="button" class="btn btn-lg btn-outline-success w-100" (click)="abrirListaProdutos()">
+                        <i class="bi bi-box-seam"></i> Clique para selecionar um produto
+                    </button>
+                </div>
+            </div>
+
+            <!-- Produto Selecionado -->
+            <div *ngIf="produtoSelecionado" class="card border-0 shadow">
+                <div class="card-header bg-success text-white py-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="bi bi-box-seam"></i> {{produtoSelecionado.sigla || produtoSelecionado.nome}}
+                            <span class="badge ms-2" [class.bg-info]="produtoSelecionado.tipo_saida === 'ESTOQUE PECA'"
+                                [class.bg-light]="produtoSelecionado.tipo_saida === 'ESTOQUE PADRAO'"
+                                [class.text-dark]="produtoSelecionado.tipo_saida === 'ESTOQUE PADRAO'">
+                                {{produtoSelecionado.tipo_saida === 'ESTOQUE PECA' ? 'Peça' : 'Padrão'}}
+                            </span>
+                        </h6>
+                        <div>
+                            <button type="button" class="btn btn-sm btn-outline-light me-1"
+                                (click)="abrirListaProdutos()" title="Trocar produto">
+                                <i class="bi bi-arrow-left-right"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-light"
+                                (click)="limparProdutoSelecionado()" title="Limpar">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <small class="d-block mt-1" style="font-size: 0.75rem;">
+                        SKU: {{produtoSelecionado.sku}} | Disponível: {{produtoSelecionado.saldo_estoque}}
+                        {{produtoSelecionado.unidade}}
+                    </small>
+                </div>
+                <div class="card-body p-3">
+                    <form [formGroup]="formItem">
+                        <div class="row g-2">
+                            <!-- Para ESTOQUE PADRÃO -->
+                            <ng-container *ngIf="produtoSelecionado.tipo_saida === 'ESTOQUE PADRAO'">
+                                <div class="col-12 col-md-5">
+                                    <label class="form-label fw-bold mb-1" style="font-size: 0.85rem;">Preço
+                                        Unitário</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">R$</span>
+                                        <input class="form-control" formControlName="preco_unitario" currencyMask>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-4">
+                                    <label class="form-label fw-bold mb-1"
+                                        style="font-size: 0.85rem;">Quantidade</label>
+                                    <input type="text" inputmode="numeric" class="form-control"
+                                        formControlName="quantidade" currencyMask id="quantidade-item-input"
+                                        [options]="getMascaraQuantidade()" autofocus (keyup.enter)="adicionarItem()">
+                                </div>
+                                <div class="col-12 col-md-3 d-flex align-items-end">
+                                    <button type="button" class="btn btn-success w-100" [disabled]="formItem.invalid"
+                                        (click)="adicionarItem()">
+                                        <i class="bi bi-plus-circle"></i> Adicionar
+                                    </button>
+                                </div>
+                            </ng-container>
+
+                            <!-- Para ESTOQUE PEÇA -->
+                            <ng-container *ngIf="produtoSelecionado.tipo_saida === 'ESTOQUE PECA'">
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label fw-bold mb-1" style="font-size: 0.85rem;">Preço
+                                        Unitário</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">R$</span>
+                                        <input class="form-control" formControlName="preco_unitario" currencyMask>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6 d-flex align-items-end">
+                                    <button type="button" class="btn btn-info w-100" (click)="abrirModalSelecaoPecas()">
+                                        <i class="bi bi-box2"></i> Selecionar Peças
+                                    </button>
+                                </div>
+                            </ng-container>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Itens do Pedido -->
+    <div class="row mt-3" *ngIf="itensPedido.length > 0">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-header text-white" style="background-color: #2c3e50;">
+                    <h5 class="mb-0"><i class="bi bi-receipt"></i> Itens da Venda</h5>
+                </div>
+                <div class="card-body p-2" style="background-color: #f8f9fa;">
+                    <!-- Cabeçalho da tabela -->
+                    <div class="fw-bold text-uppercase mb-2 pb-1 border-bottom border-2 border-dark d-flex"
+                        style="font-size: 0.7rem;">
+                        <div style="width: 42%; padding-left: 0.5rem;">ITEM</div>
+                        <div style="width: 16%; text-align: center;">QTD</div>
+                        <div style="width: 17%; text-align: right;">UNIT</div>
+                        <div style="width: 25%; text-align: right; padding-right: 0.5rem;">TOTAL</div>
+                    </div>
+                    <!-- Lista de itens -->
+                    <div *ngFor="let item of itensPedido; let i = index"
+                        class="d-flex align-items-center py-2 border-bottom" 
+                        [class.opacity-50]="item._removido"
+                        [class.text-decoration-line-through]="item._removido"
+                        style="cursor: pointer;"
+                        (click)="abrirModalEditarItem(item, i)">
+                        <div style="width: 42%; padding-left: 0.5rem;">
+                            <div class="fw-bold" style="font-size: 0.85rem; line-height: 1.1;">
+                                {{item.produto.sigla || item.produto.nome}}
+                                <span *ngIf="item._removido" class="badge bg-warning text-dark ms-1" style="font-size: 0.65rem;">
+                                    REMOVIDO
+                                </span>
+                            </div>
+                        </div>
+                        <div style="width: 16%; text-align: center;">
+                            <div class="fw-bold" style="font-size: 0.9rem;">{{item.quantidade}} {{item.unidade_saida}}
+                            </div>
+                        </div>
+                        <div style="width: 17%; text-align: right; font-size: 0.8rem;">
+                            {{item.preco_unitario | moneyBrl}}
+                        </div>
+                        <div style="width: 25%; text-align: right; padding-right: 0.5rem;">
+                            <div class="fw-bold" style="font-size: 0.95rem;">
+                                {{item.valor_total | moneyBrl}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Campo de Desconto -->
+            <div class="mt-2">
+                <form [formGroup]="formPedido">
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <label for="desconto" class="form-label fw-bold mb-1"
+                                style="font-size: 0.85rem;">Desconto</label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="text" inputmode="numeric" class="form-control" id="desconto"
+                                    formControlName="desconto" currencyMask>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Totais -->
+            <div class="mt-2 p-2" style="background-color: #f8f9fa;">
+                <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                    <span class="fw-bold text-uppercase" style="font-size: 0.85rem;">SUBTOTAL</span>
+                    <span class="fw-bold" style="font-size: 0.95rem;">{{subtotal | moneyBrl}}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                    <span class="fw-bold text-uppercase" style="font-size: 0.85rem;">DESCONTO</span>
+                    <span class="fw-bold text-danger" style="font-size: 0.95rem;">- {{totalDesconto | moneyBrl}}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center pt-2">
+                    <span class="fw-bold text-uppercase" style="font-size: 1rem;">TOTAL A PAGAR</span>
+                    <span class="fw-bold" style="font-size: 1.3rem; color: #27ae60;">{{totalPedido | moneyBrl}}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formas de Pagamento -->
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-header text-white" style="background-color: #16a085;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-credit-card"></i> Formas de Pagamento</h5>
+                        <button type="button" class="btn btn-sm btn-light" (click)="abrirModalFormaPagamento()"
+                            [disabled]="formPedido.get('venda_na_conta')?.value">
+                            <i class="bi bi-plus-circle"></i> Adicionar
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-2" style="background-color: #f8f9fa;">
+                    <!-- Mensagem quando "Venda na Conta" está marcado -->
+                    <div *ngIf="formPedido.get('venda_na_conta')?.value" class="alert alert-info mb-0 mx-2" 
+                        style="font-size: 0.85rem; border-radius: 4px;">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-journal-text fs-4 me-3"></i>
+                            <div>
+                                <strong>Venda na Conta Ativada</strong>
+                                <p class="mb-0 mt-1 text-muted" style="font-size: 0.8rem;">
+                                    Esta venda será registrada sem gerar cobranças. O valor ficará pendente na conta do cliente.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Conteúdo normal quando "Venda na Conta" não está marcado -->
+                    <div *ngIf="!formPedido.get('venda_na_conta')?.value">
+                        <div *ngIf="parcelas.length === 0" class="alert alert-info mb-0 mx-2" style="font-size: 0.85rem; border-radius: 4px;">
+                            <i class="bi bi-info-circle"></i> Nenhuma forma de pagamento adicionada
+                        </div>
+
+                        <div *ngIf="parcelas.length > 0">
+                        <!-- Agrupamento por Forma de Pagamento -->
+                        <div *ngFor="let grupo of getGruposParcelas()" class="mb-3">
+                            <!-- Cabeçalho do Grupo -->
+                            <div class="d-flex align-items-center justify-content-between p-2 mb-1"
+                                style="background-color: #d5f4e6; border-left: 4px solid #16a085; cursor: pointer; border-radius: 4px;"
+                                (click)="abrirModalEditarGrupo(grupo.grupo_id)">
+                                <div>
+                                    <span class="fw-bold" style="font-size: 0.9rem;">
+                                        <i class="bi bi-collection"></i> {{grupo.forma_pagamento.nome}}
+                                    </span>
+                                    <span class="badge bg-info ms-2" style="font-size: 0.7rem;">
+                                        {{grupo.parcelas.length}}x
+                                    </span>
+                                    <small class="text-muted ms-2" style="font-size: 0.75rem;"
+                                        *ngIf="grupo.forma_pagamento.avista">
+                                        <i class="bi bi-cash-coin"></i> À vista
+                                    </small>
+                                </div>
+                                <div class="fw-bold" style="font-size: 0.95rem; color: #16a085;">
+                                    {{grupo.total | moneyBrl}}
+                                </div>
+                            </div>
+
+                            <!-- Parcelas do Grupo -->
+                            <div *ngFor="let parcela of grupo.parcelas; let i = index"
+                                class="d-flex align-items-center py-2 border-bottom ps-4"
+                                style="cursor: pointer; background-color: white; border-radius: 4px;"
+                                (click)="abrirModalEditarParcela(parcela, parcelas.indexOf(parcela))">
+                                <div style="width: 10%;">
+                                    <span class="badge bg-secondary"
+                                        style="font-size: 0.7rem;">{{parcela.numero_parcela}}/{{parcela.total_parcelas}}</span>
+                                </div>
+                                <div style="width: 25%; text-align: center; font-size: 0.8rem;">
+                                    {{parcela.data_vencimento | date: 'dd/MM/yyyy'}}
+                                </div>
+                                <div style="width: 65%; text-align: right; padding-right: 0.5rem;">
+                                    <div class="fw-bold" style="font-size: 0.9rem;">{{parcela.valor | moneyBrl}}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Totais de pagamento -->
+                        <div class="mt-2 p-2 mx-2" style="background-color: white; border-radius: 4px;">
+                            <div class="d-flex justify-content-between py-1">
+                                <span class="fw-bold" style="font-size: 0.85rem;">TOTAL PAGO:</span>
+                                <span class="fw-bold" style="font-size: 0.95rem; color: #27ae60;">{{totalPago |
+                                    moneyBrl}}</span>
+                            </div>
+                            <div class="d-flex justify-content-between py-1" *ngIf="totalRestante > 0">
+                                <span class="fw-bold" style="font-size: 0.85rem;">RESTANTE:</span>
+                                <span class="fw-bold" style="font-size: 0.95rem; color: #e74c3c;">{{totalRestante |
+                                    moneyBrl}}</span>
+                            </div>
+                            <div *ngIf="totalPago !== totalPedido" class="alert alert-warning mt-2 mb-0"
+                                style="font-size: 0.75rem; padding: 0.5rem;">
+                                <i class="bi bi-exclamation-triangle"></i> O valor pago não corresponde ao total do
+                                pedido
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botões de Ação -->
+    <div class="row mt-3 mb-5">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-body p-3">
+                    <!-- Observação -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold"><i class="bi bi-journal-text"></i> Observação (Opcional)</label>
+                        
+                        <!-- Sem observação -->
+                        <div *ngIf="!temObservacao()">
+                            <button type="button" class="btn btn-outline-secondary w-100"
+                                (click)="abrirModalObservacao()">
+                                <i class="bi bi-plus-circle"></i> Adicionar Observação
+                            </button>
+                        </div>
+
+                        <!-- Com observação -->
+                        <div *ngIf="temObservacao()" class="card border border-info">
+                            <div class="card-body p-2">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div style="white-space: pre-wrap; font-size: 0.9rem;">{{formPedido.value.observacao}}</div>
+                                    </div>
+                                    <div class="ms-2">
+                                        <button type="button" class="btn btn-sm btn-outline-primary me-1"
+                                            (click)="abrirModalObservacao()">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                            (click)="limparObservacao()">
+                                            <i class="bi bi-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                        <div class="d-flex flex-column gap-3">
+                            <!-- Switch Venda na Conta -->
+                            <div class="form-check">
+                                <input class="form-check-input form-check-input-lg" type="checkbox" id="vendaNaConta" 
+                                    [formControl]="$any(formPedido.get('venda_na_conta'))" 
+                                    [disabled]="parcelas.length > 0"
+                                    [style.cursor]="parcelas.length > 0 ? 'not-allowed' : 'pointer'"
+                                    style="width: 1.5rem; height: 1.5rem;">
+                                <label class="form-check-label fw-bold ms-2" for="vendaNaConta" 
+                                    [style.cursor]="parcelas.length > 0 ? 'not-allowed' : 'pointer'"
+                                    [class.text-muted]="parcelas.length > 0"
+                                    style="font-size: 1.1rem;">
+                                    <i class="bi bi-journal-text" [class.text-info]="!parcelas.length" [class.text-muted]="parcelas.length > 0"></i> Venda na Conta
+                                </label>
+                                <small class="d-block text-muted ms-5" style="font-size: 0.8rem;">
+                                    <span *ngIf="parcelas.length === 0">Marque para registrar a venda sem gerar cobranças (fiado)</span>
+                                    <span *ngIf="parcelas.length > 0" class="text-warning">
+                                        <i class="bi bi-exclamation-triangle"></i> Remova as formas de pagamento para habilitar
+                                    </span>
+                                </small>
+                            </div>
+                            
+                            <!-- Switch Fechar Venda -->
+                            <div class="form-check">
+                                <input class="form-check-input form-check-input-lg" type="checkbox" id="fecharVenda" 
+                                    [formControl]="$any(formPedido.get('fechar_venda'))" style="width: 1.5rem; height: 1.5rem; cursor: pointer;">
+                                <label class="form-check-label fw-bold ms-2" for="fecharVenda" style="cursor: pointer; font-size: 1.1rem;">
+                                    <i class="bi bi-check-circle-fill text-success"></i> Fechar Venda
+                                </label>
+                                <small class="d-block text-muted ms-5" style="font-size: 0.8rem;">
+                                    Marque para finalizar e fechar a venda automaticamente
+                                </small>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-lg btn-secondary" (click)="cancelar()">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </button>
+                            <button type="button" class="btn btn-lg btn-success" [disabled]="loading || itensPedido.length === 0"
+                                (click)="salvarPedido()">
+                                <i class="bi bi-check-circle"></i> {{ formPedido.get('fechar_venda')?.value ? 'Salvar e Fechar Venda' : 'Salvar Venda' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Seleção de Clientes -->
+<div class="modal fade" [class.show]="mostrarListaClientes" [style.display]="mostrarListaClientes ? 'block' : 'none'"
+    tabindex="-1" (click)="fecharListaClientes()">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" (click)="$event.stopPropagation()">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Selecionar Cliente</h5>
+                <button type="button" class="btn-close btn-close-white" (click)="fecharListaClientes()"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="text" class="form-control form-control-lg" placeholder="Buscar cliente..."
+                        [(ngModel)]="buscaCliente" (ngModelChange)="filtrarClientes()" id="input-busca-cliente"
+                        (keyup.enter)="selecionarPrimeiroCliente()">
+                </div>
+                
+                <!-- Botão para criar novo cliente -->
+                <div class="mb-3">
+                    <button type="button" class="btn btn-success w-100" (click)="criarNovoCliente()">
+                        <i class="bi bi-person-plus-fill me-2"></i> Criar Novo Cliente
+                    </button>
+                </div>
+                
+                <div class="list-group">
+                    <button *ngFor="let cliente of clientesFiltrados" type="button"
+                        class="list-group-item list-group-item-action" (click)="selecionarCliente(cliente)">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{cliente.nome}}</h6>
+                        </div>
+                        <small class="text-muted">{{cliente.documento}}</small>
+                    </button>
+                    <div *ngIf="clientesFiltrados.length === 0" class="alert alert-info">
+                        Nenhum cliente encontrado
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="mostrarListaClientes" *ngIf="mostrarListaClientes"></div>
+
+<!-- Modal de Seleção de Produtos -->
+<div class="modal fade" [class.show]="mostrarListaProdutos" [style.display]="mostrarListaProdutos ? 'block' : 'none'"
+    tabindex="-1" (click)="fecharListaProdutos()">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" (click)="$event.stopPropagation()">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Selecionar Produto</h5>
+                <button type="button" class="btn-close btn-close-white" (click)="fecharListaProdutos()"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input id="busca-produto-input" type="text" class="form-control form-control-lg"
+                        placeholder="Buscar produto..." [(ngModel)]="buscaProduto" (ngModelChange)="filtrarProdutos()"
+                        (keyup.enter)="selecionarPrimeiroProduto()" autofocus>
+                </div>
+                <div class="list-group">
+                    <button *ngFor="let est of estoqueFiltrado" type="button"
+                        class="list-group-item list-group-item-action" (click)="selecionarProduto(est)"
+                        [disabled]="est.saldo_estoque <= 0">
+                        <div class="d-flex align-items-start gap-3">
+                            <div style="min-width: 100px;">
+                                <span class="badge d-block text-center py-2" [class.bg-success]="est.saldo_estoque > 0"
+                                    [class.bg-danger]="est.saldo_estoque <= 0" style="font-size: 0.9rem;">
+                                    {{est.saldo_estoque.toFixed(2)}} {{est.unidade}}
+                                </span>
+                                <small class="d-block text-center text-muted mt-1">Disponível</small>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">
+                                    {{est.nome}}
+                                    <span class="badge ms-2" [class.bg-info]="est.tipo_saida === 'ESTOQUE PECA'"
+                                        [class.bg-secondary]="est.tipo_saida === 'ESTOQUE PADRAO'">
+                                        {{est.tipo_saida === 'ESTOQUE PECA' ? 'Peça' : 'Padrão'}}
+                                    </span>
+                                </h6>
+                                <small class="text-muted">SKU: {{est.sku}}</small>
+                            </div>
+                        </div>
+                    </button>
+                    <div *ngIf="estoqueFiltrado.length === 0" class="alert alert-info">
+                        Nenhum produto encontrado
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="mostrarListaProdutos" *ngIf="mostrarListaProdutos"></div>
+
+<!-- Modal de Seleção de Peças -->
+<!-- Templates de Modais NgBootstrap -->
+
+<!-- Modal de Selecionar Peças -->
+<ng-template #modalPecas let-modal>
+    <div class="modal-header bg-info text-white">
+        <h5 class="modal-title">
+            <i class="bi bi-box-seam"></i> Selecionar Peças - {{produtoSelecionado?.nome}}
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"></button>
+    </div>
+    <div class="modal-body p-2" style="background-color: #f8f9fa;" tabindex="0" (keydown)="onPecasKeyDown($event)">
+        <!-- Exibir Almoxarifado Principal -->
+        <div class="alert alert-info mb-2 mx-2" *ngIf="almoxarifadoSelecionadoPecas"
+            style="font-size: 0.85rem; padding: 0.5rem;">
+            <i class="bi bi-building"></i> <strong>Almoxarifado:</strong> {{almoxarifadoSelecionadoPecas.nome}}
+        </div>
+
+        <div *ngIf="almoxarifadoSelecionadoPecas">
+            <!-- Busca -->
+            <!-- <div class="mb-2 mx-2">
+                <input type="text" class="form-control" placeholder="Buscar por nota ou fornecedor..."
+                    [(ngModel)]="buscaPeca" (ngModelChange)="filtrarPecas()">
+            </div> -->
+
+            <!-- Contador de selecionados -->
+            <div class="mb-2 px-2" style="font-size: 0.85rem; font-weight: bold;">
+                {{pecasSelecionadas.length}} peça(s) selecionada(s)
+                <small class="text-muted ms-2" style="font-size: 0.75rem;">
+                    <i class="bi bi-info-circle"></i> Use ↑↓ para navegar, Enter/Espaço para selecionar, 
+                    <strong>C ou F</strong> para confirmar
+                </small>
+            </div>
+
+            <!-- Loading -->
+            <div *ngIf="loadingPecas" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+            </div>
+
+            <!-- Cabeçalho -->
+            <div *ngIf="!loadingPecas && pecasFiltradas.length > 0"
+                class="fw-bold text-uppercase mb-2 pb-1 border-bottom border-2 border-dark d-flex"
+                style="font-size: 0.7rem;">
+                <div style="width: 8%; text-align: center; padding-left: 0.5rem;"></div>
+                <div style="width: 25%; text-align: center;">DATA</div>
+                <div style="width: 35%; text-align: right;">PESO</div>
+                <div style="width: 32%; text-align: right; padding-right: 0.5rem;">CUSTO UNIT.</div>
+            </div>
+
+            <!-- Lista de Peças -->
+            <div *ngFor="let peca of pecasFiltradas; let i = index" 
+                [attr.data-peca-index]="i"
+                class="d-flex align-items-center py-2 border-bottom"
+                style="cursor: pointer;" 
+                [class.bg-primary]="isPecaSelecionada(peca)"
+                [class.bg-opacity-10]="isPecaSelecionada(peca)" 
+                [class.bg-warning]="(isPecaFocada(i) && !isPecaSelecionada(peca)) || peca._removidoTemp"
+                [class.bg-opacity-25]="(isPecaFocada(i) && !isPecaSelecionada(peca)) || peca._removidoTemp"
+                (click)="selecionarPeca(peca)">
+                <div style="width: 8%; text-align: center; padding-left: 0.5rem;">
+                    <input type="checkbox" class="form-check-input" [checked]="isPecaSelecionada(peca)"
+                        (click)="$event.stopPropagation()">
+                </div>
+                <div style="width: 25%; text-align: center;">
+                    <div style="font-size: 0.85rem;">
+                        {{peca.nota?.data_nota | dateSimple}}
+                        <span *ngIf="peca._removidoTemp" class="badge bg-info text-white ms-1" style="font-size: 0.6rem;">
+                            REATIVAR
+                        </span>
+                    </div>
+                </div>
+                <div style="width: 35%; text-align: right;">
+                    <div class="fw-bold" style="font-size: 0.85rem;">{{peca.peso}} <small class="text-muted"
+                            style="font-size: 0.75rem;">{{peca.unidade}}</small></div>
+                </div>
+                <div style="width: 32%; text-align: right; padding-right: 0.5rem;">
+                    <div class="fw-bold" style="font-size: 0.85rem;">{{peca.preco_custo_unitario | moneyBrl}}</div>
+                </div>
+            </div>
+
+            <!-- Sem peças -->
+            <div *ngIf="!loadingPecas && pecasFiltradas.length === 0" class="alert alert-warning mx-2"
+                style="font-size: 0.85rem;">
+                <i class="bi bi-exclamation-triangle"></i> Nenhuma peça disponível
+            </div>
+        </div>
+
+        <!-- Sem almoxarifado selecionado -->
+        <div *ngIf="!almoxarifadoSelecionadoPecas" class="alert alert-info mx-2">
+            Selecione um almoxarifado para visualizar as peças disponíveis
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">
+            Cancelar
+        </button>
+        <button type="button" class="btn btn-primary" [disabled]="pecasSelecionadas.length === 0"
+            (click)="confirmarSelecaoPecas()">
+            <i class="bi bi-check-circle"></i> Confirmar ({{pecasSelecionadas.length}})
+        </button>
+    </div>
+</ng-template>
+
+
+<!-- Modal de Editar Item -->
+<ng-template #modalEditarItem let-modal>
+    <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title">
+            <i class="bi bi-pencil-square"></i> Editar Item
+        </h5>
+        <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+    </div>
+    <div class="modal-body" *ngIf="itemSendoEditado">
+        <!-- Informações do Produto -->
+        <div class="alert alert-info mb-3">
+            <h6 class="mb-1">{{itemSendoEditado.produto.sigla || itemSendoEditado.produto.nome}}</h6>
+            <small>SKU: {{itemSendoEditado.produto.sku}}</small>
+            <span class="badge ms-2" [class.bg-info]="itemSendoEditado.tipo_saida === 'ESTOQUE PECA'"
+                [class.bg-secondary]="itemSendoEditado.tipo_saida === 'ESTOQUE PADRAO'">
+                {{itemSendoEditado.tipo_saida === 'ESTOQUE PECA' ? 'Peça' : 'Padrão'}}
+            </span>
+        </div>
+
+        <!-- Informação da peça (se for ESTOQUE PECA) -->
+        <div *ngIf="itemSendoEditado.tipo_saida === 'ESTOQUE PECA' && itemSendoEditado.peca"
+            class="alert alert-light mb-3">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <small class="text-muted">Data Entrada:</small>
+                    <div>{{itemSendoEditado.peca.nota?.data_nota | date: 'dd/MM/yyyy'}}</div>
+                </div>
+                <div>
+                    <small class="text-muted">Peso:</small>
+                    <div>{{itemSendoEditado.peca.peso}} {{itemSendoEditado.peca.unidade}}</div>
+                </div>
+                <div>
+                    <small class="text-muted">Custo:</small>
+                    <div>{{itemSendoEditado.peca.preco_custo_unitario | moneyBrl}}</div>
+                </div>
+            </div>
+            <div class="alert alert-warning mt-2 mb-0" style="font-size: 0.85rem;">
+                <i class="bi bi-info-circle"></i> Para peças, apenas o preço pode ser alterado. A quantidade é fixa.
+            </div>
+        </div>
+
+        <!-- Formulário de Edição -->
+        <form [formGroup]="formEditarItem">
+            <div class="row g-3">
+                <!-- Quantidade (desabilitado para peças) -->
+                <div class="col-12 col-md-6">
+                    <label for="edit_quantidade" class="form-label fw-bold">Quantidade</label>
+                    <input type="text" inputmode="numeric" class="form-control form-control-lg" id="edit_quantidade"
+                        formControlName="quantidade" currencyMask
+                        [options]="{ precision: 2, allowNegative: false, decimal: ',' }"
+                        [readonly]="itemSendoEditado.tipo_saida === 'ESTOQUE PECA'" appNextOnEnter>
+                </div>
+
+                <!-- Preço Unitário -->
+                <div class="col-12 col-md-6">
+                    <label for="edit_preco_unitario" class="form-label fw-bold">Preço Unitário</label>
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text">R$</span>
+                        <input class="form-control" id="edit_preco_unitario" formControlName="preco_unitario"
+                            currencyMask appNextOnEnter>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Valor Total -->
+            <div class="mt-3 p-3 bg-light rounded">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="fw-bold">Valor Total:</span>
+                    <span class="fw-bold fs-4" style="color: #27ae60;">
+                        {{(formEditarItem.value.quantidade * formEditarItem.value.preco_unitario) | moneyBrl}}
+                    </span>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-success" [disabled]="formEditarItem.invalid" (click)="salvarEdicaoItem()">
+            <i class="bi bi-check-circle"></i> Salvar Alterações
+        </button>
+        <button type="button" class="btn btn-danger" (click)="removerItemModal()">
+            <i class="bi bi-trash"></i> Remover Item
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">
+            Cancelar
+        </button>
+    </div>
+</ng-template>
+
+<!-- Modal de Forma de Pagamento -->
+<ng-template #modalFormaPagamento let-modal>
+    <div class="modal-header text-white" style="background-color: #16a085;">
+        <h5 class="modal-title">
+            <i class="bi bi-credit-card"></i> Adicionar Forma de Pagamento
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"></button>
+    </div>
+    <div class="modal-body">
+        <div class="alert alert-info mb-3">
+            <strong>Valor a pagar:</strong> {{totalRestante | moneyBrl}}
+        </div>
+
+        <div class="mb-3">
+            <input id="busca-forma-pagamento-input" type="text" class="form-control form-control-lg" placeholder="Buscar forma de pagamento..."
+                [(ngModel)]="buscaFormaPagamento" (ngModelChange)="filtrarFormasPagamento()" 
+                (keyup.enter)="selecionarPrimeiraFormaPagamento()">
+        </div>
+
+        <form [formGroup]="formFormaPagamento">
+            <!-- Seleção de forma -->
+            <div class="mb-3" *ngIf="!formFormaPagamento.value.forma_pagamento">
+                <label class="form-label fw-bold">Selecione a forma de pagamento:</label>
+                <div class="list-group">
+                    <button *ngFor="let forma of formasPagamentoFiltradas" type="button"
+                        class="list-group-item list-group-item-action" (click)="selecionarFormaPagamento(forma)">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{forma.nome}}</h6>
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar"></i> Intervalo: {{forma.dias_intervalo}} dia(s)
+                                    <span class="ms-2" *ngIf="forma.avista">
+                                        <i class="bi bi-cash-coin"></i> À vista
+                                    </span>
+                                </small>
+                            </div>
+                            <i class="bi bi-arrow-right-circle fs-4"></i>
+                        </div>
+                    </button>
+                    <div *ngIf="formasPagamentoFiltradas.length === 0" class="alert alert-warning">
+                        Nenhuma forma de pagamento encontrada
+                    </div>
+                </div>
+            </div>
+
+            <!-- Forma selecionada -->
+            <div *ngIf="formFormaPagamento.value.forma_pagamento">
+                <div class="alert alert-success mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">{{formFormaPagamento.value.forma_pagamento.nome}}</h6>
+                            <small>Intervalo: {{formFormaPagamento.value.forma_pagamento.dias_intervalo}} dia(s)</small>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger"
+                            (click)="formFormaPagamento.patchValue({ forma_pagamento: null })">
+                            <i class="bi bi-x"></i> Trocar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="valor_pagamento" class="form-label fw-bold">
+                        Valor do Pagamento
+                        <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-2"
+                            (click)="limparValorPagamento()">
+                            <i class="bi bi-x-circle"></i> Limpar
+                        </button>
+                    </label>
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text">R$</span>
+                        <input #valorPagamentoInput id="valor-pagamento-input" class="form-control"
+                            formControlName="valor_pagamento" currencyMask appNextOnEnter>
+                    </div>
+                    <small class="text-muted">Restante a pagar: {{totalRestante | moneyBrl}}</small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="quantidade_parcelas" class="form-label fw-bold">Quantidade de Parcelas</label>
+                    <input type="number" class="form-control form-control-lg" id="quantidade_parcelas"
+                        formControlName="quantidade_parcelas" min="1" max="36" (keyup.enter)="gerarParcelas()">
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-success" [disabled]="formFormaPagamento.invalid" (click)="gerarParcelas()">
+            <i class="bi bi-check-circle"></i> Gerar Parcelas
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">
+            Cancelar
+        </button>
+    </div>
+</ng-template>
+
+<!-- Modal de Editar Parcela -->
+<ng-template #modalEditarParcela let-modal>
+    <div class="modal-header text-white" style="background-color: #16a085;">
+        <h5 class="modal-title">
+            <i class="bi bi-pencil-square"></i> Editar Parcela
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"></button>
+    </div>
+    <div class="modal-body" *ngIf="parcelaEditando">
+        <div class="alert alert-info mb-3">
+            <h6 class="mb-1">Parcela {{parcelaEditando.numero_parcela}}/{{parcelaEditando.total_parcelas}} - {{parcelaEditando.forma_pagamento.nome}}</h6>
+            <small *ngIf="parcelaEditando.forma_pagamento.avista">
+                <i class="bi bi-cash-coin"></i> À vista
+            </small>
+        </div>
+
+        <form [formGroup]="formEditarParcela">
+            <div class="row g-3">
+                <div class="col-12 col-md-6">
+                    <label for="edit_data_vencimento" class="form-label fw-bold">Data de Vencimento</label>
+                    <input type="date" class="form-control form-control-lg" id="edit_data_vencimento"
+                        formControlName="data_vencimento">
+                </div>
+                <div class="col-12 col-md-6">
+                    <label for="edit_valor_parcela" class="form-label fw-bold">Valor</label>
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text">R$</span>
+                        <input class="form-control" id="edit_valor_parcela" formControlName="valor" currencyMask>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-danger" (click)="removerParcelaModal()">
+            <i class="bi bi-trash"></i> Remover
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">
+            Cancelar
+        </button>
+        <button type="button" class="btn btn-success" [disabled]="formEditarParcela.invalid"
+            (click)="salvarEdicaoParcela()">
+            <i class="bi bi-check-circle"></i> Salvar
+        </button>
+    </div>
+</ng-template>
+
+<!-- Modal de Editar Grupo -->
+<ng-template #modalEditarGrupo let-modal>
+    <div class="modal-header text-white" style="background-color: #16a085;">
+        <h5 class="modal-title">
+            <i class="bi bi-collection"></i> Editar Grupo de Parcelas
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"></button>
+    </div>
+    <div class="modal-body" *ngIf="grupoEditando">
+        <div class="alert alert-info mb-3">
+            <div *ngFor="let grupo of getGruposParcelas()">
+                <div *ngIf="grupo.grupo_id === grupoEditando">
+                    <h6 class="mb-1">{{grupo.forma_pagamento.nome}}</h6>
+                    <small>{{grupo.parcelas.length}} parcela(s) - Total: {{grupo.total | moneyBrl}}</small>
+                </div>
+            </div>
+        </div>
+
+        <form [formGroup]="formEditarParcela">
+            <div class="mb-3">
+                <label for="edit_data_grupo" class="form-label fw-bold">
+                    Nova Data Base (primeira parcela)
+                </label>
+                <input type="date" class="form-control form-control-lg" id="edit_data_grupo"
+                    formControlName="data_vencimento">
+                <small class="text-muted">
+                    As demais parcelas serão ajustadas automaticamente conforme o intervalo da forma de pagamento
+                </small>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-danger" (click)="removerGrupoModal()">
+            <i class="bi bi-trash"></i> Remover Grupo
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">
+            Cancelar
+        </button>
+        <button type="button" class="btn btn-success" [disabled]="formEditarParcela.invalid"
+            (click)="salvarEdicaoGrupo()">
+            <i class="bi bi-check-circle"></i> Salvar
+        </button>
+    </div>
+</ng-template>
+
+<!-- Modal de Endereço de Entrega -->
+<ng-template #modalEndereco let-modal>
+    <div class="modal-header bg-secondary text-white">
+        <h5 class="modal-title">
+            <i class="bi bi-geo-alt"></i> Endereço de Entrega
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"></button>
+    </div>
+    <div class="modal-body">
+        <form [formGroup]="formEndereco">
+            <div class="row g-3">
+                <div class="col-12 col-md-4">
+                    <label for="modal_cep" class="form-label fw-bold">CEP</label>
+                    <input type="text" class="form-control" id="modal_cep" formControlName="cep" placeholder="00000-000"
+                        maxlength="9">
+                </div>
+                <div class="col-12 col-md-8">
+                    <label for="modal_logradouro" class="form-label fw-bold">Logradouro</label>
+                    <input type="text" class="form-control" id="modal_logradouro" formControlName="logradouro"
+                        placeholder="Rua, Avenida, etc.">
+                </div>
+                <div class="col-12 col-md-4">
+                    <label for="modal_numero" class="form-label fw-bold">Número</label>
+                    <input type="text" class="form-control" id="modal_numero" formControlName="numero"
+                        placeholder="123">
+                </div>
+                <div class="col-12 col-md-8">
+                    <label for="modal_complemento" class="form-label fw-bold">Complemento</label>
+                    <input type="text" class="form-control" id="modal_complemento" formControlName="complemento"
+                        placeholder="Apto, Casa, Bloco, etc.">
+                </div>
+                <div class="col-12 col-md-5">
+                    <label for="modal_bairro" class="form-label fw-bold">Bairro</label>
+                    <input type="text" class="form-control" id="modal_bairro" formControlName="bairro"
+                        placeholder="Nome do bairro">
+                </div>
+                <div class="col-12 col-md-5">
+                    <label for="modal_cidade" class="form-label fw-bold">Cidade</label>
+                    <input type="text" class="form-control" id="modal_cidade" formControlName="cidade"
+                        placeholder="Nome da cidade">
+                </div>
+                <div class="col-12 col-md-2">
+                    <label for="modal_estado" class="form-label fw-bold">UF</label>
+                    <input type="text" class="form-control text-uppercase" id="modal_estado" formControlName="estado"
+                        placeholder="SP" maxlength="2">
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">
+            Cancelar
+        </button>
+        <button type="button" class="btn btn-primary" (click)="salvarEndereco()">
+            <i class="bi bi-check-circle"></i> Confirmar
+        </button>
+    </div>
+</ng-template>
+
+<!-- Modal de Observação -->
+<ng-template #modalObservacao let-modal>
+    <div class="modal-header bg-info text-white">
+        <h5 class="modal-title">
+            <i class="bi bi-journal-text"></i> Observação da Venda
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"></button>
+    </div>
+    <div class="modal-body">
+        <form [formGroup]="formObservacao">
+            <div class="mb-3">
+                <label for="observacao-textarea" class="form-label fw-bold">Observação</label>
+                <textarea class="form-control" id="observacao-textarea" formControlName="observacao" 
+                    rows="6" placeholder="Digite aqui qualquer observação sobre a venda..."></textarea>
+                <small class="text-muted">Você pode adicionar informações extras como detalhes de entrega, instruções especiais, etc.</small>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">
+            Cancelar
+        </button>
+        <button type="button" class="btn btn-primary" (click)="salvarObservacao()">
+            <i class="bi bi-check-circle"></i> Confirmar
+        </button>
+    </div>
+</ng-template>

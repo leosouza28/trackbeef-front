@@ -1,0 +1,215 @@
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="fw-bold mb-4">Painel de Recebimentos</h1>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="row">
+        <div class="col-12 text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+            <p class="mt-3 text-muted">Carregando dados...</p>
+        </div>
+    </div>
+
+    <!-- Conteúdo -->
+    <div *ngIf="!loading && painelData">
+        <!-- Cards de Métricas -->
+        <div class="row g-3 mb-4">
+            <!-- Total Clientes -->
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                                    <i class="bi bi-people-fill fs-2 text-primary"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="text-muted mb-1 small">Total de Clientes</h6>
+                                <h3 class="mb-0 fw-bold">{{painelData.total_clientes}}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Valor Total -->
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                                    <i class="bi bi-cash-coin fs-2 text-info"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="text-muted mb-1 small">Valor Total</h6>
+                                <h3 class="mb-0 fw-bold text-info">{{painelData.valor_total | moneyBrl}}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total em Aberto -->
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                                    <i class="bi bi-clock-history fs-2 text-warning"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="text-muted mb-1 small">Em Aberto</h6>
+                                <h3 class="mb-0 fw-bold text-warning">{{painelData.valor_total_em_aberto | moneyBrl}}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total em Atraso -->
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="rounded-circle bg-danger bg-opacity-10 p-3">
+                                    <i class="bi bi-exclamation-triangle-fill fs-2 text-danger"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="text-muted mb-1 small">Em Atraso</h6>
+                                <h3 class="mb-0 fw-bold text-danger">{{painelData.valor_total_em_atraso | moneyBrl}}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Clientes -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-list-ul"></i> Clientes com Valores a Receber
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div *ngIf="painelData.lista.length === 0" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-1"></i>
+                            <p class="mt-3">Nenhum cliente com valores a receber</p>
+                        </div>
+
+                        <!-- Desktop View -->
+                        <div class="d-none d-lg-block">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Cliente</th>
+                                        <th class="text-center">Vendas</th>
+                                        <th class="text-end">Valor a Receber</th>
+                                        <th class="text-end">Valor Recebido</th>
+                                        <th class="text-end">Saldo</th>
+                                        <th class="text-center">Situação</th>
+                                        <th class="text-center">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let cliente of painelData.lista" 
+                                        class="cursor-pointer"
+                                        (click)="verDetalhesCliente(cliente._id)">
+                                        <td>
+                                            <div>
+                                                <strong>{{cliente.nome}}</strong>
+                                                <br>
+                                                <small class="text-muted">{{cliente.documento}}</small>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-info">{{cliente.vendas?.length || 0}}</span>
+                                        </td>
+                                        <td class="text-end">{{cliente.valor_receber | moneyBrl}}</td>
+                                        <td class="text-end">{{cliente.valor_recebido | moneyBrl}}</td>
+                                        <td class="text-end">
+                                            <strong class="text-success">{{cliente.saldo_a_receber | moneyBrl}}</strong>
+                                        </td>
+                                        <td class="text-center">
+                                            <span *ngIf="cliente.dias_em_atraso > 0" class="badge bg-danger">
+                                                <i class="bi bi-exclamation-circle"></i> {{cliente.dias_em_atraso}} dia(s) em atraso
+                                            </span>
+                                            <span *ngIf="!cliente.dias_em_atraso || cliente.dias_em_atraso === 0" class="badge bg-success">
+                                                <i class="bi bi-check-circle"></i> Em dia
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-primary" 
+                                                (click)="verDetalhesCliente(cliente._id); $event.stopPropagation()">
+                                                <i class="bi bi-eye"></i> Ver Detalhes
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Mobile View -->
+                        <div class="d-lg-none">
+                            <div *ngFor="let cliente of painelData.lista; let last = last" 
+                                class="p-3 cursor-pointer hover-bg-light"
+                                [class.border-bottom]="!last"
+                                (click)="verDetalhesCliente(cliente._id)">
+                                <!-- Cabeçalho -->
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1 fw-bold">{{cliente.nome}}</h6>
+                                        <small class="text-muted d-block">{{cliente.documento}}</small>
+                                    </div>
+                                    <span class="badge bg-info ms-2">{{cliente.vendas?.length || 0}} venda(s)</span>
+                                </div>
+
+                                <!-- Valores -->
+                                <div class="row g-2 mb-2">
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">A Receber</small>
+                                        <span class="fw-semibold">{{cliente.valor_receber | moneyBrl}}</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Recebido</small>
+                                        <span class="fw-semibold">{{cliente.valor_recebido | moneyBrl}}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Saldo e Situação -->
+                                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                    <div>
+                                        <small class="text-muted d-block">Saldo</small>
+                                        <strong class="text-success fs-5">{{cliente.saldo_a_receber | moneyBrl}}</strong>
+                                    </div>
+                                    <div>
+                                        <span *ngIf="cliente.dias_em_atraso > 0" class="badge bg-danger">
+                                            <i class="bi bi-exclamation-circle"></i> {{cliente.dias_em_atraso}} dia(s)
+                                        </span>
+                                        <span *ngIf="!cliente.dias_em_atraso || cliente.dias_em_atraso === 0" class="badge bg-success">
+                                            <i class="bi bi-check-circle"></i> Em dia
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,8 +1,7 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <h1 class="fw-bold ">Consultar usuários</h1>
-            <p class="text-muted ">usuários > consultar usuários</p>
+            <h1 class="fw-bold ">Usuários</h1>
         </div>
         <div class="col-12">
             <div class="card border-0 shadow-sm">
@@ -15,26 +14,15 @@
                     <div class="row row-gap-3 mb-3">
                         <div class="col-12 col-lg-6">
                             <input type="text" class="form-control" id="buscar-input" formControlName="q"
-                                placeholder="Documento, nome">
+                                placeholder="Nome">
                         </div>
                     </div>
-                    <div class="row row-gap-3 mb-3">
-                        <div class="col-12 col-lg-3">
-                            <select class="form-select" formControlName="status">
-                                <option value="TODOS">Status</option>
-                                <option *ngFor="let item of status" [value]="item">{{item}}</option>
-                            </select>
-                        </div>
-                        <div class="col-12 col-lg-3">
-                            <select class="form-select" formControlName="nivel_acesso">
-                                <option value="TODOS">Nível de acesso</option>
-                                <option *ngFor="let item of niveis_acesso" [value]="item">{{item}}</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="d-flex flex-row">
-                        <button type="submit" class="btn btn-primary">
+                    <div class="d-flex flex-row gap-2">
+                        <button type="submit" class="btn btn-secondary">
                             <i class="bi bi-search me-2"></i> Pesquisar
+                        </button>
+                        <button type="button" class="btn btn-primary" [routerLink]="['/admin/usuarios/form']">
+                            <i class="bi bi-plus-lg me-2"></i> Adicionar
                         </button>
                     </div>
                 </form>
@@ -45,10 +33,8 @@
                                 <tr>
                                     <th>Nome</th>
                                     <th>Documento</th>
-                                    <th>Status</th>
-                                    <th>Acesso</th>
-                                    <th>Origem</th>
-                                    <th>Criação</th>
+                                    <th>Perfil</th>
+                                    <th class="text-end">Criação</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -56,17 +42,9 @@
                                     [routerLink]="['/admin/usuarios/form']" [queryParams]="{ id: item._id }">
                                     <td>{{item.nome}}</td>
                                     <td>{{item.documento | cpfCnpj}}</td>
-                                    <td>
-                                        <render-badge [badgeText]="item.status"></render-badge>
-                                    </td>
-                                    <td>
-                                        <small>
-                                            {{item.niveis}}
-                                        </small>
-                                    </td>
-                                    <td>{{item.origem_cadastro}}</td>
-                                    <td>
-                                        {{item.createdAt | date: 'dd/MM/yyyy HH:mm:ss'}}
+                                    <td>{{item.empresa?.perfil?.nome || "Não definido"}}</td>
+                                    <td class="text-end">
+                                        {{item.criado_por?.usuario | userInfo}} {{item.criado_por?.data_hora | dateFromNow}}
                                     </td>
                                 </tr>
                             </tbody>

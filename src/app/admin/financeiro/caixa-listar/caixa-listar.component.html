@@ -1,0 +1,47 @@
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="fw-bold ">Caixas</h1>
+        </div>
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <form [formGroup]="form" (submit)="query()" class="p-3">
+                    <div class="d-flex flex-row gap-2">
+                        <button type="button" class="btn btn-primary" [routerLink]="['/admin/financeiro/caixa/form']">
+                            <i class="bi bi-plus-lg me-2"></i> Adicionar
+                        </button>
+                    </div>
+                </form>
+                <div class="px-3 table-responsive">
+                    <table-template [total]="data.total" [loading]="loading" [paginacaoAtiva]="true">
+
+                        <div class="row row-gap-3">
+                            <div class="col-12 col-lg-6" *ngFor="let item of data.lista">
+                                <div class="card bg-white d-flex flex-column gap-3 p-3">
+                                    <h5 class="fw-bold mb-0">{{ item.nome }}</h5>
+                                    <div class="d-flex flex-row" *ngIf="item.principal">
+                                        <span class="badge bg-{{ item.principal ? 'success' : 'secondary' }} me-2" >
+                                            {{ item.principal ? 'Caixa Principal' : '' }}
+                                        </span>
+                                    </div>
+                                    <div class="d-flex flex-row">
+                                        <a [routerLink]="['/admin/financeiro/caixa', item._id, 'lancamentos']" class="btn btn-sm btn-outline-primary me-2">
+                                            <i class="bi bi-list-columns me-1"></i> Lançamentos
+                                        </a>
+                                        <a [routerLink]="['/admin/financeiro/caixa/form']" [queryParams]="{id: item._id}" class="btn btn-sm btn-outline-primary me-2">
+                                            <i class="bi bi-pencil-fill me-1"></i> Editar
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash-fill me-1"></i> Excluir
+                                        </button>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </table-template>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

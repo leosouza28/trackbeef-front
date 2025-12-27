@@ -1,0 +1,439 @@
+<div class="container-fluid">
+    <div class="row row-gap-3">
+        <div class="col-12">
+            <h1 class="fw-bold ">Entrada de Estoque</h1>
+        </div>
+        <div class="col-12">
+            <div class="card border-0 shadow-sm p-3">
+                <form [formGroup]="form" (submit)="query()">
+                    <div class="d-flex flex-row gap-2">
+                        <button type="button" class="btn btn-primary" [routerLink]="['/admin/notas-entradas/form']">
+                            <i class="bi bi-plus-lg me-2"></i> Lançar
+                        </button>
+                    </div>
+                </form>
+                <table-template [total]="data.total" [loading]="loading" [paginacaoAtiva]="true">
+                    <!-- Visualização Mobile (cards) -->
+                    <div class="row g-3">
+                        <div class="col-12" *ngFor="let item of data.lista">
+                            <div class="card bg-white border-0 shadow-sm cursor-pointer"
+                                (click)="abrirDetalhes(item, modalDetalhes)">
+                                <div class="card-body">
+                                    <!-- Cabeçalho do Card -->
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div>
+                                            <h6 class="mb-1 fw-bold">Nota #{{item.numero_nota}}</h6>
+                                            <small class="text-muted">
+                                                <i class="bi bi-calendar3 me-1"></i>
+                                                {{item.data_nota | dateSimple}}
+                                            </small>
+                                        </div>
+                                        <render-badge [badgeText]="item.situacao"></render-badge>
+                                    </div>
+
+                                    <!-- Fornecedor -->
+                                    <div class="mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-building me-2 text-primary"></i>
+                                            <div>
+                                                <small class="text-muted d-block">Fornecedor</small>
+                                                <span class="fw-semibold">{{item.fornecedor?.nome}}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Almoxarifado (se disponível) -->
+                                    <div class="mb-3" *ngIf="item.almoxarifado?.nome">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-box-seam me-2 text-success"></i>
+                                            <div>
+                                                <small class="text-muted d-block">Almoxarifado</small>
+                                                <span>{{item.almoxarifado.nome}}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Produtos (resumo) -->
+                                    <div class="mb-3" *ngIf="item.produtos?.length > 0">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-boxes me-2 text-info"></i>
+                                            <div>
+                                                <small class="text-muted d-block">Produtos</small>
+                                                <span>{{item.produtos.length}} produto(s)</span>
+                                                <span class="ms-2 text-muted">|</span>
+                                                <span class="ms-2 badge bg-light text-dark">
+                                                    {{item.total_geral_peso?.toFixed(2)}} kg
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Valores -->
+                                    <div class="border-top pt-3">
+                                        <div class="row g-2">
+                                            <div class="col-6" *ngIf="item.valor_frete > 0">
+                                                <small class="text-muted d-block">Frete</small>
+                                                <span class="fw-semibold">R$ {{item.valor_frete | moneyBrl}}</span>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted d-block">Total Nota</small>
+                                                <span class="fw-bold text-success fs-5">R$ {{item.valor_total_nota |
+                                                    moneyBrl}}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Rodapé -->
+                                    <div class="mt-3 pt-2 border-top">
+                                        <small class="text-muted">
+                                            <i class="bi bi-person-circle me-1"></i>
+                                            {{item.criado_por?.usuario | userInfo}}
+                                            <span class="mx-1">•</span>
+                                            <i class="bi bi-clock me-1"></i>
+                                            {{item.criado_por.data_hora | dateFromNow}}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </table-template>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Template do Modal Detalhes da Nota -->
+<ng-template #modalDetalhes let-modal>
+    <div class="modal-header">
+        <h5 class="modal-title">
+            <i class="bi bi-receipt"></i> Detalhes da Entrada de Nota
+        </h5>
+        <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+    </div>
+    <div class="modal-body">
+        <div *ngIf="loadingModal" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+        </div>
+
+        <div *ngIf="!loadingModal && notaSelecionada">
+            <!-- Informações Gerais -->
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle"></i> Informações Gerais
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6 col-md-3">
+                            <strong class="d-block text-muted small">Data da Nota</strong>
+                            <span class="fs-6">{{notaSelecionada.data_nota | dateSimple}}</span>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <strong class="d-block text-muted small">Número da Nota</strong>
+                            <span class="fs-6">{{notaSelecionada.numero_nota}}</span>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <strong class="d-block text-muted small">Fornecedor</strong>
+                            <span class="fs-6">{{notaSelecionada.fornecedor?.nome}}</span>
+                            <br>
+                            <small class="text-muted">{{notaSelecionada.fornecedor?.documento}}</small>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <strong class="d-block text-muted small">Taxas/Frete</strong>
+                            <span class="fs-6">R$ {{notaSelecionada.valor_taxas_frete | moneyBrl}}</span>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <strong class="d-block text-muted small">Total Geral Peso</strong>
+                            <span class="fs-6">{{notaSelecionada.total_geral_peso?.toFixed(2)}}</span>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <strong class="d-block text-muted small">Total Geral Valor</strong>
+                            <span class="fs-6 text-success fw-bold">R$ {{notaSelecionada.total_geral_valor |
+                                moneyBrl}}</span>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <strong class="d-block text-muted small">Situação</strong>
+                            <render-badge
+                                [badgeText]="notaSelecionada.situacao || (notaSelecionada.efetuar_fechamento ? 'FECHADA' : 'PENDENTE')"></render-badge>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informações de Cancelamento (se cancelada) -->
+            <div class="card border-0 shadow-sm mb-3"
+                *ngIf="notaSelecionada.situacao === 'CANCELADA' && notaSelecionada.cancelado_fechamento">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-x-circle"></i> Informações do Cancelamento
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <strong class="d-block text-muted small">Cancelado por</strong>
+                            <span class="fs-6">{{notaSelecionada.cancelado_fechamento.usuario?.nome ||
+                                notaSelecionada.cancelado_fechamento.usuario?.username}}</span>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <strong class="d-block text-muted small">Data/Hora do Cancelamento</strong>
+                            <span class="fs-6">{{notaSelecionada.cancelado_fechamento.data_hora | dateSimple}}</span>
+                        </div>
+                        <div class="col-12" *ngIf="notaSelecionada.cancelado_fechamento_motivo">
+                            <strong class="d-block text-muted small mb-2">Motivo do Cancelamento</strong>
+                            <div class="alert alert-warning mb-0">
+                                <i class="bi bi-chat-left-quote"></i>
+                                {{notaSelecionada.cancelado_fechamento_motivo}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Produtos -->
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-box-seam"></i> Produtos
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <ngb-accordion>
+                        <ngb-panel *ngFor="let prod of notaSelecionada.produtos; let i = index"
+                            [id]="'produto-modal-' + i">
+                            <ng-template ngbPanelTitle>
+                                <div
+                                    class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center w-100 gap-2">
+                                    <div>
+                                        <strong>{{prod.produto_nome}}</strong>
+                                        <small class="text-muted ms-2">({{prod.lancamentos?.length}}
+                                            lançamento(s))</small>
+                                    </div>
+                                    <div class="d-flex gap-2 gap-md-3 me-3">
+                                        <span class="badge bg-primary">
+                                            {{prod.total_peso?.toFixed(2)}} kg
+                                        </span>
+                                        <strong class="text-success">R$ {{prod.total_valor | moneyBrl}}</strong>
+                                    </div>
+                                </div>
+                            </ng-template>
+                            <ng-template ngbPanelContent>
+                                <div class="table-responsive p-0">
+                                    <table class="table table-sm table-hover mb-0 p-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Peso/Qtd</th>
+                                                <th>Preço Unit.</th>
+                                                <th>Valor Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr *ngFor="let lanc of prod.lancamentos; let j = index">
+                                                <td>{{j + 1}}</td>
+                                                <td>{{lanc.peso?.toFixed(2)}}</td>
+                                                <td>R$ {{lanc.preco_custo_unitario | moneyBrl}}</td>
+                                                <td>R$ {{lanc.valor_total | moneyBrl}}</td>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot class="table-info">
+                                            <tr>
+                                                <th>Total:</th>
+                                                <th>{{prod.total_peso?.toFixed(2)}}</th>
+                                                <th></th>
+                                                <th>R$ {{prod.total_valor | moneyBrl}}</th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </ng-template>
+                        </ngb-panel>
+                    </ngb-accordion>
+                </div>
+            </div>
+
+            <!-- Cobranças (se houver) -->
+            <div class="card border-0 shadow-sm mb-3"
+                *ngIf="notaSelecionada.cobrancas && notaSelecionada.cobrancas.length > 0">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">
+                        <i class="bi bi-cash-stack"></i> Cobranças ({{notaSelecionada.cobrancas.length}})
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Forma&nbsp;Pagamento</th>
+                                    <th>Número</th>
+                                    <th>Vencimento</th>
+                                    <th>Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let cobranca of notaSelecionada.cobrancas">
+                                    <td>{{cobranca.forma_pagamento.nome}}</td>
+                                    <td>{{cobranca.numero_cobranca}}</td>
+                                    <td>{{cobranca.data_vencimento | dateSimple}}</td>
+                                    <td class="fw-bold text-success">R$ {{cobranca.valor | moneyBrl}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Final -->
+            <div class="alert alert-success">
+                <div class="row g-2">
+                    <div class="col-6 col-md-4">
+                        <small class="text-muted d-block">Total Produtos</small>
+                        <strong>R$ {{notaSelecionada.total_geral_valor | moneyBrl}}</strong>
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <small class="text-muted d-block">Taxas/Frete</small>
+                        <strong>R$ {{notaSelecionada.valor_taxas_frete | moneyBrl}}</strong>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <small class="text-muted d-block">TOTAL GERAL</small>
+                        <h5 class="mb-0">
+                            <strong>R$ {{notaSelecionada.valor_total_nota | moneyBrl}}</strong>
+                        </h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <div
+            class="d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center w-100 gap-2">
+            <div class="d-flex flex-wrap gap-2">
+                <!-- Aviso se estiver cancelada -->
+                <div *ngIf="notaSelecionada && notaSelecionada.situacao === 'CANCELADA'" class="text-danger w-100 mb-2">
+                    <i class="bi bi-exclamation-circle me-2"></i>
+                    <small>Esta nota foi cancelada e não pode mais ser editada ou excluída.</small>
+                </div>
+
+                <!-- Botão Editar (apenas se não foi fechada e não está cancelada) -->
+                <button type="button" class="btn btn-primary btn-sm" (click)="editarNota()"
+                    *ngIf="notaSelecionada && !notaSelecionada.efetuar_fechamento && notaSelecionada.situacao !== 'CANCELADA'"
+                    [disabled]="loadingModal">
+                    <i class="bi bi-pencil"></i> Editar
+                </button>
+
+                <!-- Botão Excluir (apenas se não foi fechada e não está cancelada) -->
+                <button type="button" class="btn btn-danger btn-sm" (click)="excluirNota(modalConfirmarExclusao)"
+                    *ngIf="notaSelecionada && !notaSelecionada.efetuar_fechamento && notaSelecionada.situacao !== 'CANCELADA'"
+                    [disabled]="loadingModal">
+                    <i class="bi bi-trash"></i> Excluir
+                </button>
+
+                <!-- Botão Cancelar Fechamento (apenas se foi fechada e não está cancelada) -->
+                <button type="button" class="btn btn-warning btn-sm"
+                    (click)="abrirModalCancelarFechamento(modalCancelarFechamento)"
+                    *ngIf="notaSelecionada && notaSelecionada.efetuar_fechamento && notaSelecionada.situacao !== 'CANCELADA'"
+                    [disabled]="loadingModal">
+                    <i class="bi bi-x-circle"></i> Cancelar Fechamento
+                </button>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" (click)="modal.dismiss()">
+                Fechar
+            </button>
+        </div>
+    </div>
+</ng-template>
+
+<!-- Modal de Confirmação de Exclusão -->
+<ng-template #modalConfirmarExclusao let-modal>
+    <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">
+            <i class="bi bi-exclamation-triangle"></i> Confirmar Exclusão
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"></button>
+    </div>
+    <div class="modal-body">
+        <p class="mb-0">Tem certeza que deseja excluir esta entrada de nota?</p>
+        <p class="text-muted small mb-0">Esta ação não pode ser desfeita.</p>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">
+            Cancelar
+        </button>
+        <button type="button" class="btn btn-danger" (click)="modal.close('confirm')">
+            <i class="bi bi-trash"></i> Confirmar Exclusão
+        </button>
+    </div>
+</ng-template>
+
+<!-- Modal de Cancelar Fechamento -->
+<ng-template #modalCancelarFechamento let-modal>
+    <div class="modal-header bg-warning">
+        <h5 class="modal-title">
+            <i class="bi bi-exclamation-triangle"></i> Cancelar Fechamento da Nota
+        </h5>
+        <button type="button" class="btn-close" (click)="modal.dismiss()" [disabled]="loadingCancelamento"></button>
+    </div>
+    <div class="modal-body">
+        <div class="alert alert-warning" role="alert">
+            <h6 class="alert-heading">
+                <i class="bi bi-exclamation-circle"></i> ATENÇÃO
+            </h6>
+            <p class="mb-2">Ao cancelar o fechamento desta nota:</p>
+            <ul class="mb-0">
+                <li>A nota será marcada como <strong>CANCELADA</strong></li>
+                <li>Caso você opte por cancelar os produtos lançados no estoque, isso pode causar inconsistencias sérias
+                    no estoque e nas informações de custo.</li>
+                <li>Caso você opte por cancelar as cobranças, isso pode causar inconsistencias sérias nas informações
+                    financeiras.</li>
+            </ul>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">
+                Opções de Cancelamento
+            </label>
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="cancelarCobrancas" [(ngModel)]="cancelarCobrancas"
+                    [disabled]="loadingCancelamento">
+                <label class="form-check-label" for="cancelarCobrancas">
+                    Cancelar cobranças automaticamente
+                </label>
+            </div>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="removerEstoque" [(ngModel)]="removerEstoque"
+                    [disabled]="loadingCancelamento">
+                <label class="form-check-label" for="removerEstoque">
+                    Remover do estoque os produtos lançados
+                </label>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="motivoCancelamento" class="form-label fw-bold">
+                Motivo do Cancelamento <span class="text-danger">*</span>
+            </label>
+            <textarea class="form-control" id="motivoCancelamento" rows="4" [(ngModel)]="motivoCancelamento"
+                placeholder="Informe o motivo do cancelamento..." [disabled]="loadingCancelamento"
+                maxlength="500"></textarea>
+            <div class="form-text">
+                <small>{{motivoCancelamento.length}}/500 caracteres</small>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()" [disabled]="loadingCancelamento">
+            Cancelar
+        </button>
+        <button type="button" class="btn btn-warning" (click)="confirmarCancelamento(modal)"
+            [disabled]="loadingCancelamento || !motivoCancelamento.trim()">
+            <span *ngIf="loadingCancelamento" class="spinner-border spinner-border-sm me-2" role="status"></span>
+            <i *ngIf="!loadingCancelamento" class="bi bi-check-circle"></i>
+            Confirmar Cancelamento
+        </button>
+    </div>
+</ng-template>

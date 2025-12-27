@@ -24,6 +24,7 @@ export class RenderBadgeComponent implements OnInit, OnChanges {
     if (this.badgeText == 'VALIDO') this.badgeVariant = 'badge text-bg-success';
     if (this.badgeText == 'PAGO') this.badgeVariant = 'badge text-bg-success';
     if (this.badgeText == 'CONCLUIDO') this.badgeVariant = 'badge text-bg-success';
+    if (this.badgeText == 'CONCLUIDA') this.badgeVariant = 'badge text-bg-success';
     if (this.badgeText == 'ABERTO') this.badgeVariant = 'badge text-bg-success';
     if (this.badgeText == 'DESBLOQUEADO') this.badgeVariant = 'badge text-bg-success';
     // Carteirinha
@@ -39,6 +40,7 @@ export class RenderBadgeComponent implements OnInit, OnChanges {
     if (this.badgeText == 'ABERTA') this.badgeVariant = 'badge text-bg-warning';
     if (this.badgeText == 'PENDENTE') this.badgeVariant = 'badge text-bg-warning';
     if (this.badgeText == 'BAIXADO') this.badgeVariant = 'badge text-bg-warning';
+    if (this.badgeText == 'BAIXADA') this.badgeVariant = 'badge text-bg-warning';
     
     if (this.badgeText == 'EXPIRADO') this.badgeVariant = 'badge text-bg-danger text-white';
     if (this.badgeText == 'BLOQUEADO') this.badgeVariant = 'badge text-bg-danger text-white';

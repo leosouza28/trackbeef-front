@@ -1,0 +1,113 @@
+<button 
+  *ngIf="helpContent"
+  [class]="buttonClass" 
+  (click)="openHelp(helpModal)"
+  [title]="'Ajuda - ' + helpContent.titulo">
+  <i class="bi bi-question-circle"></i>
+  <span *ngIf="position === 'inline'" class="ms-1 d-none d-sm-inline">Ajuda</span>
+</button>
+
+<!-- Modal de Ajuda -->
+<ng-template #helpModal let-modal>
+  <div class="modal-header bg-info text-white">
+    <h5 class="modal-title">
+      <i class="bi bi-info-circle-fill me-2"></i>
+      {{ helpContent.titulo }}
+    </h5>
+    <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <!-- Descrição -->
+    <div class="help-description mb-4" *ngIf="helpContent.descricao">
+      <p class="lead">{{ helpContent.descricao }}</p>
+    </div>
+
+    <!-- Campos -->
+    <div class="help-fields mb-4" *ngIf="helpContent.campos && helpContent.campos.length > 0">
+      <h6 class="fw-bold mb-3">
+        <i class="bi bi-list-check me-2"></i>
+        Campos e Funcionalidades
+      </h6>
+      <div class="accordion" id="accordionFields">
+        <div class="accordion-item" *ngFor="let campo of helpContent.campos; let i = index">
+          <h2 class="accordion-header">
+            <button 
+              class="accordion-button collapsed" 
+              type="button" 
+              data-bs-toggle="collapse" 
+              [attr.data-bs-target]="'#collapse' + i">
+              <i [class]="campo.icone + ' me-2'"></i>
+              <strong>{{ campo.nome }}</strong>
+              <span class="badge bg-secondary ms-2" *ngIf="campo.obrigatorio">Obrigatório</span>
+            </button>
+          </h2>
+          <div 
+            [id]="'collapse' + i" 
+            class="accordion-collapse collapse" 
+            data-bs-parent="#accordionFields">
+            <div class="accordion-body">
+              <p class="mb-2">{{ campo.descricao }}</p>
+              <div class="alert alert-light mb-0" *ngIf="campo.exemplo">
+                <small>
+                  <i class="bi bi-lightbulb me-1"></i>
+                  <strong>Exemplo:</strong> {{ campo.exemplo }}
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dicas -->
+    <div class="help-tips mb-4" *ngIf="helpContent.dicas && helpContent.dicas.length > 0">
+      <h6 class="fw-bold mb-3">
+        <i class="bi bi-star me-2"></i>
+        Dicas Importantes
+      </h6>
+      <ul class="list-unstyled">
+        <li *ngFor="let dica of helpContent.dicas" class="mb-2">
+          <i class="bi bi-check-circle-fill text-success me-2"></i>
+          {{ dica }}
+        </li>
+      </ul>
+    </div>
+
+    <!-- Passo a Passo -->
+    <div class="help-steps" *ngIf="helpContent.passos && helpContent.passos.length > 0">
+      <h6 class="fw-bold mb-3">
+        <i class="bi bi-arrow-right-circle me-2"></i>
+        Passo a Passo
+      </h6>
+      <ol class="ps-3">
+        <li *ngFor="let passo of helpContent.passos" class="mb-2">
+          {{ passo }}
+        </li>
+      </ol>
+    </div>
+
+    <!-- Atalhos -->
+    <div class="help-shortcuts mt-4" *ngIf="helpContent.atalhos && helpContent.atalhos.length > 0">
+      <div class="alert alert-info">
+        <h6 class="fw-bold mb-2">
+          <i class="bi bi-keyboard me-2"></i>
+          Atalhos de Teclado
+        </h6>
+        <div class="row">
+          <div class="col-md-6" *ngFor="let atalho of helpContent.atalhos">
+            <kbd>{{ atalho.tecla }}</kbd> - {{ atalho.acao }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.close()">
+      Fechar
+    </button>
+    <button type="button" class="btn btn-primary" routerLink="/admin/tutorial" (click)="modal.close()">
+      <i class="bi bi-mortarboard me-2"></i>
+      Ver Tutorial Completo
+    </button>
+  </div>
+</ng-template>

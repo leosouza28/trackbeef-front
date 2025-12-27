@@ -1,0 +1,31 @@
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.card-body {
+  padding: 1rem 1.5rem;
+}
+
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  border-radius: 0.25rem;
+  
+  i {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .card-body .row > div {
+    margin-bottom: 0.5rem;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  
+  .d-flex.gap-2 {
+    justify-content: flex-start !important;
+  }
+}

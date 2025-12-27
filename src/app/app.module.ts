@@ -4,7 +4,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ServiceWorkerModule } from '@angular/service-worker';
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModule, NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { QRCodeModule } from 'angularx-qrcode';
 import { NgChartsModule } from 'ng2-charts';
 import { NgxCurrencyDirective, NgxCurrencyInputMode, provideEnvironmentNgxCurrency } from 'ngx-currency';
@@ -20,15 +20,14 @@ import { FormUsuariosComponent } from './admin/usuarios/form-usuarios/form-usuar
 import { ListarUsuariosComponent } from './admin/usuarios/listar-usuarios/listar-usuarios.component';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { AreaClienteSairComponent } from './cliente/area-cliente-sair/area-cliente-sair.component';
 import { ClienteContainerComponent } from './cliente/cliente-container/cliente-container.component';
 import { HomeComponent } from './cliente/home/home.component';
 import { AlertComponent } from './components/alert/alert.component';
-import { CarrinhoFloatComponent } from './components/carrinho-float/carrinho-float.component';
 import { ClienteQuickFormComponent } from './components/cliente-quick-form/cliente-quick-form.component';
 import { ImageCropperModalComponent } from './components/image-cropper-modal/image-cropper-modal.component';
 import { IngressoCardComponent } from './components/ingresso-card/ingresso-card.component';
 import { InlineErrorComponent } from './components/inline-error/inline-error.component';
+import { CadastroPessoaModalComponent } from './components/cadastro-pessoa-modal/cadastro-pessoa-modal.component';
 import { InlineLoadingComponent } from './components/inline-loading/inline-loading.component';
 import { NumericPadComponent } from './components/numeric-pad/numeric-pad.component';
 import { RenderBadgeComponent } from './components/render-badge/render-badge.component';
@@ -42,29 +41,45 @@ import { PhonePipe } from './pipes/phone.pipe';
 import { UserAgentPipe } from './pipes/user-agent.pipe';
 import { UserInfoPipe } from './pipes/user-info.pipe';
 import { UsuarioRefreshTokenComponent } from './usuario-refresh-token/usuario-refresh-token.component';
-import { MonitorarPixesComponent } from './admin/monitorar/monitorar-pixes/monitorar-pixes.component';
 import { DateFromNowPipe } from './pipes/date-from-now.pipe';
-import { PixGerarComponent } from './admin/pixs/pix-gerar/pix-gerar.component';
-import { PixListarComponent } from './admin/pixs/pix-listar/pix-listar.component';
 import localePt from '@angular/common/locales/pt';
 import { registerLocaleData } from '@angular/common';
+import { ListarEstoqueComponent } from './admin/estoque/listar-estoque/listar-estoque.component';
+import { EntradaNotasComponent } from './admin/estoque/entrada-notas/entrada-notas.component';
+import { EntradaNotasListarComponent } from './admin/estoque/entrada-notas-listar/entrada-notas-listar.component';
+import { ProdutosListarComponent } from './admin/produtos/produtos-listar/produtos-listar.component';
+import { ProdutosFormComponent } from './admin/produtos/produtos-form/produtos-form.component';
+import { ListarPessoasComponent } from './admin/pessoas/listar-pessoas/listar-pessoas.component';
+import { FormPessoasComponent } from './admin/pessoas/form-pessoas/form-pessoas.component';
+import { AlmoxarifadoListarComponent } from './admin/almoxarifado-listar/almoxarifado-listar.component';
+import { AlmoxarifadoFormComponent } from './admin/almoxarifado-form/almoxarifado-form.component';
+import { HistoricoEstoqueProdutoComponent } from './admin/estoque/historico-estoque-produto/historico-estoque-produto.component';
+import { VendasListarComponent } from './admin/vendas/vendas-listar/vendas-listar.component';
+import { VendasPdvComponent } from './admin/vendas/vendas-pdv/vendas-pdv.component';
+import { FormasPagamentoListarComponent } from './admin/configuracoes/formas-pagamento-listar/formas-pagamento-listar.component';
+import { FormasPagamentoFormComponent } from './admin/configuracoes/formas-pagamento-form/formas-pagamento-form.component';
+import { JurosMultasFormComponent } from './admin/configuracoes/juros-multas-form/juros-multas-form.component';
+import { NextOnEnterDirective } from './directives/next-on-enter.directive';
+import { VendasVisualizacaoComponent } from './admin/vendas/vendas-visualizacao/vendas-visualizacao.component';
+import { CaixaListarComponent } from './admin/financeiro/caixa-listar/caixa-listar.component';
+import { ContaspagarListarComponent } from './admin/financeiro/contaspagar-listar/contaspagar-listar.component';
+import { ContasreceberListarComponent } from './admin/financeiro/contasreceber-listar/contasreceber-listar.component';
+import { CaixaFormComponent } from './admin/financeiro/caixa-form/caixa-form.component';
+import { MultiCheckboxSelectComponent } from './components/multi-checkbox-select/multi-checkbox-select.component';
+import { CaixaLancamentosComponent } from './admin/financeiro/caixa-lancamentos/caixa-lancamentos.component';
+import { ImageCropperComponent } from 'ngx-image-cropper';
+import { TutorialComponent } from './admin/tutorial/tutorial.component';
+import { HelpButtonComponent } from './components/help-button/help-button.component';
+import { AlmoxarifadoVisualizarComponent } from './admin/almoxarifado-visualizar/almoxarifado-visualizar.component';
+import { RecebimentosComponent } from './admin/financeiro/recebimentos/recebimentos.component';
+import { RecebimentosClientesComponent } from './admin/financeiro/recebimentos-clientes/recebimentos-clientes.component';
+import { ConfigurarEmpresaComponent } from './admin/configuracoes/configurar-empresa/configurar-empresa.component';
+import { ClientesFaturasComponent } from './cliente/public/clientes-faturas/clientes-faturas.component';
 
 registerLocaleData(localePt, 'pt-BR');
 
 LOAD_WASM('assets/wasm/ngx-scanner-qrcode.wasm').subscribe();
 
-
-export const customCurrencyMaskConfig = {
-  align: "right",
-  allowNegative: true,
-  allowZero: true,
-  decimal: ",",
-  precision: 2,
-  prefix: "R$ ",
-  suffix: "",
-  thousands: ".",
-  nullable: true
-};
 
 
 @NgModule({
@@ -94,16 +109,42 @@ export const customCurrencyMaskConfig = {
     NumericPadComponent,
     ClienteQuickFormComponent,
     ClienteContainerComponent,
-    CarrinhoFloatComponent,
     IngressoCardComponent,
-    AreaClienteSairComponent,
     AlertComponent,
     UsuarioRefreshTokenComponent,
     ImageCropperModalComponent,
-    MonitorarPixesComponent,
+    CadastroPessoaModalComponent,
     DateFromNowPipe,
-    PixGerarComponent,
-    PixListarComponent,
+    ListarEstoqueComponent,
+    EntradaNotasComponent,
+    EntradaNotasListarComponent,
+    ProdutosListarComponent,
+    ProdutosFormComponent,
+    ListarPessoasComponent,
+    FormPessoasComponent,
+    AlmoxarifadoListarComponent,
+    AlmoxarifadoFormComponent,
+    HistoricoEstoqueProdutoComponent,
+    VendasListarComponent,
+    VendasPdvComponent,
+    FormasPagamentoListarComponent,
+    FormasPagamentoFormComponent,
+    JurosMultasFormComponent,
+    NextOnEnterDirective,
+    VendasVisualizacaoComponent,
+    CaixaListarComponent,
+    ContaspagarListarComponent,
+    ContasreceberListarComponent,
+    CaixaFormComponent,
+    MultiCheckboxSelectComponent,
+    CaixaLancamentosComponent,
+    TutorialComponent,
+    HelpButtonComponent,
+    AlmoxarifadoVisualizarComponent,
+    RecebimentosComponent,
+    RecebimentosClientesComponent,
+    ConfigurarEmpresaComponent,
+    ClientesFaturasComponent
   ],
   imports: [
     BrowserModule,
@@ -118,6 +159,7 @@ export const customCurrencyMaskConfig = {
     NgxCurrencyDirective,
     BrowserAnimationsModule,
     QRCodeModule,
+    ImageCropperComponent,
     ServiceWorkerModule.register('ngsw-worker.js', {
       enabled: !isDevMode(),
       // Register the ServiceWorker as soon as the application is stable
@@ -133,7 +175,7 @@ export const customCurrencyMaskConfig = {
       allowZero: true,
       decimal: ",",
       precision: 2,
-      prefix: "R$ ",
+      prefix: "",
       suffix: "",
       thousands: ".",
       nullable: true,

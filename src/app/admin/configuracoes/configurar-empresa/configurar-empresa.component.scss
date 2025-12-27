@@ -1,0 +1,14 @@
+.cropper-wrapper {
+    max-width: 100%;
+    overflow: hidden;
+    
+    ::ng-deep {
+        image-cropper {
+            max-height: 400px;
+        }
+    }
+}
+
+.gap-3 {
+    gap: 1rem !important;
+}

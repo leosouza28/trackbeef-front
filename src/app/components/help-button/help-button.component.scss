@@ -1,0 +1,96 @@
+.floating-help-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  }
+
+  i {
+    font-size: 1.5rem;
+  }
+
+  span {
+    display: none;
+  }
+}
+
+.help-description {
+  border-left: 4px solid #0dcaf0;
+  padding-left: 15px;
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.help-fields {
+  .accordion-button {
+    font-size: 0.95rem;
+    padding: 12px 15px;
+
+    &:not(.collapsed) {
+      background-color: #e7f7ff;
+      color: #0c63e4;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+    }
+  }
+
+  .accordion-body {
+    padding: 15px;
+    background: #f8f9fa;
+  }
+}
+
+.help-tips {
+  li {
+    padding: 8px 0;
+    line-height: 1.6;
+  }
+}
+
+.help-steps {
+  ol {
+    li {
+      padding: 6px 0;
+      line-height: 1.6;
+    }
+  }
+}
+
+.help-shortcuts {
+  kbd {
+    padding: 4px 8px;
+    font-size: 0.85rem;
+    background: #343a40;
+    color: white;
+    border-radius: 4px;
+    margin-right: 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .floating-help-btn {
+    width: 48px;
+    height: 48px;
+    bottom: 15px;
+    right: 15px;
+
+    i {
+      font-size: 1.3rem;
+    }
+  }
+}

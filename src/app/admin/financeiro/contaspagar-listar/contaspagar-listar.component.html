@@ -1,0 +1,629 @@
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="fw-bold ">Contas a Pagar</h1>
+        </div>
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <!-- Filtros -->
+                <form [formGroup]="form" (submit)="query()" class="p-3">
+                    <!-- Filtros de Data -->
+                    <div class="row g-3 mb-3">
+                        <!-- Tipo de Data -->
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Filtrar por:</label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" formControlName="tipo_data" 
+                                           value="vencimento" id="radioVencimento">
+                                    <label class="form-check-label" for="radioVencimento">
+                                        Vencimento
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" formControlName="tipo_data" 
+                                           value="emissao" id="radioEmissao">
+                                    <label class="form-check-label" for="radioEmissao">
+                                        Emissão
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Data Inicial -->
+                        <div class="col-md-3">
+                            <label for="data-inicial" class="form-label fw-bold">Data Inicial</label>
+                            <input type="date" class="form-control" id="data-inicial" formControlName="data_inicial">
+                        </div>
+                        
+                        <!-- Data Final -->
+                        <div class="col-md-3">
+                            <label for="data-final" class="form-label fw-bold">Data Final</label>
+                            <input type="date" class="form-control" id="data-final" formControlName="data_final">
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <!-- Busca -->
+                        <div class="col-md-4">
+                            <label for="input-busca" class="form-label fw-bold">Buscar</label>
+                            <input type="text" class="form-control" id="input-busca" formControlName="q" 
+                                   placeholder="Fornecedor, Nº Nota" (keyup.arrowdown)="focarPrimeiroItem()">
+                        </div>
+                        
+                        <!-- Filtro Status -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Status</label>
+                            <app-multi-checkbox-select 
+                                [options]="statusOptions" 
+                                formControlName="status"
+                                placeholder="Selecione os status">
+                            </app-multi-checkbox-select>
+                        </div>
+                        
+                        <!-- Filtro Forma de Pagamento -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Forma de Pagamento</label>
+                            <app-multi-checkbox-select 
+                                [options]="formasPagamentoOptions" 
+                                formControlName="formas_pagamento"
+                                placeholder="Selecione as formas">
+                            </app-multi-checkbox-select>
+                        </div>
+                    </div>
+                    
+                    <!-- Botões de ação -->
+                    <div class="d-flex gap-2 mt-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search me-2"></i> Buscar
+                        </button>
+                        <button type="button" class="btn btn-secondary" (click)="limparFiltros()">
+                            <i class="bi bi-x-circle me-2"></i> Limpar Filtros
+                        </button>
+                        <button type="button" class="btn btn-success" (click)="abrirModalBaixa()" 
+                                *ngIf="getCobrancasPendentes().length > 0">
+                            <i class="bi bi-check-circle me-2"></i> Baixa em Lote
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="px-3 table-responsive">
+                    <table-template [total]="data.total" [loading]="loading" [paginacaoAtiva]="true">
+                        <table class="table table-sm table-fixed table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <td>Emissão</td>
+                                    <td>Nota</td>
+                                    <td>Descrição</td>
+                                    <td class="text-center">Parcela</td>
+                                    <td class="text-center">Vencimento</td>
+                                    <td class="text-center">Status</td>
+                                    <td class="text-end">Bruto</td>
+                                    <td class="text-end">Juros</td>
+                                    <td class="text-end">Desconto</td>
+                                    <td class="text-end">Total</td>
+                                    <td class="text-end">Pago</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let item of data.lista; let i = index" [attr.data-item-index]="i"
+                                    [class.table-active]="isItemFocado(i)" [class.border-primary]="isItemFocado(i)"
+                                    [class.border-2]="isItemFocado(i)"
+                                    style="transition: all 0.2s ease; cursor: pointer;"
+                                    (click)="abrirModalOperacoes(item)">
+                                    <td>{{item.data_emissao | dateSimple}}</td>
+                                    <td>{{item.nota?.numero_nota}}</td>
+                                    <td>{{item.forma_pagamento}}</td>
+                                    <td class="text-center">{{item.parcela}} de {{item.total_parcelas}}</td>
+                                    <td class="text-center">{{item.data_vencimento | dateSimple}}</td>
+                                    <td class="text-center">{{item.status}}</td>
+                                    <td class="text-end">{{item.valor_bruto | moneyBrl}}</td>
+                                    <td class="text-end">{{item.valor_juros | moneyBrl}}</td>
+                                    <td class="text-end">{{item.valor_desconto | moneyBrl}}</td>
+                                    <td class="text-end">{{item.valor_total | moneyBrl}}</td>
+                                    <td class="text-end">{{item.valor_pago | moneyBrl}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </table-template>
+                </div>
+            </div>
+        </div>
+
+        <!-- Painel de Informações do Item Focado (apenas desktop) -->
+        <div class="col-12 mt-3 sticky-bottom" *ngIf="isDesktop && getItemFocado()">
+            <div class="card border-primary shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="bi bi-info-circle"></i> Detalhes da Conta Selecionada
+                        </h6>
+                        <small class="opacity-75">
+                            <span class="me-3">↑↓ Navegar itens</span>
+                            <span>←→ Mudar página ({{getPaginaAtual()}}/{{getTotalPaginas()}})</span>
+                        </small>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Informações da Nota -->
+                    <div class="alert alert-light mb-3" *ngIf="getItemFocado().nota">
+                        <strong><i class="bi bi-file-earmark-text me-2"></i>Nota:</strong>
+                        <span class="ms-2">{{ getItemFocado().nota.numero_nota }}</span> •
+                        <span class="ms-2">{{ getItemFocado().nota.data | dateSimple }}</span> •
+                        <span class="ms-2">{{ getItemFocado().nota.fornecedor?.nome }}</span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>Emissão:</strong><br>
+                            {{getItemFocado().data_emissao | dateSimple}}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Vencimento:</strong><br>
+                            {{getItemFocado().data_vencimento | dateSimple}}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Status:</strong><br>
+                            <span class="badge" [class.bg-success]="getItemFocado().status === 'PAGA'"
+                                [class.bg-warning]="getItemFocado().status === 'PENDENTE'"
+                                [class.bg-danger]="getItemFocado().status === 'BAIXADA'">
+                                {{getItemFocado().status}}
+                            </span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Parcela:</strong><br>
+                            {{getItemFocado().parcela}} de {{getItemFocado().total_parcelas}}
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <strong>Forma de Pagamento:</strong><br>
+                            {{getItemFocado().forma_pagamento}}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Valor Total:</strong><br>
+                            <span class="fs-5 text-primary">{{getItemFocado().valor_total | moneyBrl}}</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Valor Pago:</strong><br>
+                            <span class="fs-5 text-success">{{getItemFocado().valor_pago | moneyBrl}}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Indicador de Navegação por Teclado -->
+        <div class="col-12 mt-3" *ngIf="isDesktop && !getItemFocado() && data.lista.length > 0">
+            <div class="alert alert-info d-flex justify-content-between align-items-center mb-0">
+                <div>
+                    <i class="bi bi-keyboard"></i> <strong>Navegação por teclado ativada</strong>
+                </div>
+                <div class="d-flex gap-4">
+                    <small><kbd>↑</kbd> <kbd>↓</kbd> Navegar entre itens</small>
+                    <small><kbd>←</kbd> <kbd>→</kbd> Mudar página ({{getPaginaAtual()}}/{{getTotalPaginas()}})</small>
+                    <small><kbd>Enter</kbd> Abrir operações</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Operações -->
+<ng-template #modalOperacoes let-modal>
+    <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">
+            <i class="bi bi-cash-stack"></i> Operações - Conta a Pagar
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"></button>
+    </div>
+
+    <div class="modal-body" *ngIf="cobrancaSelecionada">
+        <!-- Informações da Nota -->
+        <div class="alert alert-light mb-3" *ngIf="cobrancaSelecionada.nota">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-file-earmark-text fs-5 me-3 text-danger"></i>
+                <div>
+                    <strong>Nota: {{ cobrancaSelecionada.nota.numero_nota }}</strong><br>
+                    <small class="text-muted">
+                        {{ cobrancaSelecionada.nota.data | dateSimple }} • 
+                        {{ cobrancaSelecionada.nota.fornecedor?.nome }}
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informações da Cobrança -->
+        <div class="alert alert-info mb-3">
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Forma de Pagamento:</strong> {{cobrancaSelecionada.forma_pagamento}}<br>
+                    <strong>Parcela:</strong> {{cobrancaSelecionada.parcela}}/{{cobrancaSelecionada.total_parcelas}}
+                </div>
+                <div class="col-md-6 text-end">
+                    <strong>Vencimento:</strong> {{cobrancaSelecionada.data_vencimento | dateSimple}}<br>
+                    <strong>Valor:</strong> <span class="fs-5 text-primary">{{cobrancaSelecionada.valor_total | moneyBrl}}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seleção de Operação -->
+        <div *ngIf="!operacaoSelecionada" class="mb-3">
+            <h6 class="mb-3">Selecione a operação:</h6>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-success w-100 py-3" (click)="selecionarOperacao('lancamento')"
+                        [disabled]="cobrancaSelecionada.status !== 'PENDENTE' || getValorRestante(cobrancaSelecionada) <= 0">
+                        <i class="bi bi-check-circle fs-3 d-block mb-2"></i>
+                        <strong>Lançar Pagamento</strong>
+                        <small class="d-block mt-1">Informar valor pago</small>
+                    </button>
+                </div>
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-warning w-100 py-3" (click)="selecionarOperacao('alterar')"
+                        [disabled]="cobrancaSelecionada.status !== 'PENDENTE'">
+                        <i class="bi bi-pencil-square fs-3 d-block mb-2"></i>
+                        <strong>Alterar Cobrança</strong>
+                        <small class="d-block mt-1">Adicionar juros/desconto</small>
+                    </button>
+                </div>
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-danger w-100 py-3" (click)="selecionarOperacao('excluir')"
+                        [disabled]="!cobrancaSelecionada.lancamentos || cobrancaSelecionada.lancamentos.length === 0">
+                        <i class="bi bi-trash fs-3 d-block mb-2"></i>
+                        <strong>Excluir Lançamentos</strong>
+                        <small class="d-block mt-1">Remover pagamentos</small>
+                    </button>
+                </div>
+                <div class="col-md-4" *ngIf="cobrancaSelecionada.status === 'BAIXADA'">
+                    <button type="button" class="btn btn-info w-100 py-3" (click)="selecionarOperacao('reverter-baixa')">
+                        <i class="bi bi-arrow-counterclockwise fs-3 d-block mb-2"></i>
+                        <strong>Reverter Baixa</strong>
+                        <small class="d-block mt-1">Voltar ao status pendente</small>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulário de Lançamento -->
+        <div *ngIf="operacaoSelecionada === 'lancamento'">
+            <button type="button" class="btn btn-sm btn-secondary mb-3" (click)="operacaoSelecionada = null">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </button>
+
+            <h6 class="mb-3"><i class="bi bi-check-circle"></i> Lançar Pagamento</h6>
+
+            <!-- Resumo dos valores -->
+            <div class="alert alert-info mb-3">
+                <div class="row">
+                    <div class="col-md-4">
+                        <small class="text-muted d-block">Valor Total</small>
+                        <strong>{{ cobrancaSelecionada?.valor_total | currency:'BRL' }}</strong>
+                    </div>
+                    <div class="col-md-4" *ngIf="getValorJaPago(cobrancaSelecionada) > 0">
+                        <small class="text-muted d-block">Valor Pago</small>
+                        <strong class="text-success">{{ getValorJaPago(cobrancaSelecionada) | currency:'BRL' }}</strong>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted d-block">Valor Restante</small>
+                        <strong class="text-primary">{{ getValorRestante(cobrancaSelecionada) | currency:'BRL' }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <form [formGroup]="formLancamento">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="input-caixa" class="form-label fw-bold">Caixa *</label>
+                        <select class="form-select" id="input-caixa" formControlName="caixa_id">
+                            <option value="">Selecione um caixa</option>
+                            <option *ngFor="let caixa of caixas" [value]="caixa._id">
+                                {{caixa.nome}} <span *ngIf="caixa.principal">(Principal)</span>
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="input-forma-pagamento" class="form-label fw-bold">Forma de Pagamento *</label>
+                        <select class="form-select" id="input-forma-pagamento" formControlName="forma_pagamento_id">
+                            <option value="">Selecione uma forma</option>
+                            <option *ngFor="let forma of formas_pagamento" [value]="forma._id">
+                                {{forma.nome}}
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        <label for="input-data-pagamento" class="form-label fw-bold">Data de Pagamento *</label>
+                        <input type="date" class="form-control" id="input-data-pagamento"
+                            formControlName="data_pagamento">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="input-valor-pago" class="form-label fw-bold">Valor Pago *</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="text" class="form-control" id="input-valor-pago"
+                                formControlName="valor_pago" currencyMask
+                                [options]="{ prefix: '', thousands: '.', decimal: ',', align: 'left', precision: 2 }"
+                                placeholder="0,00">
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Formulário de Alteração -->
+        <div *ngIf="operacaoSelecionada === 'alterar'">
+            <button type="button" class="btn btn-sm btn-secondary mb-3" (click)="operacaoSelecionada = null">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </button>
+
+            <h6 class="mb-3"><i class="bi bi-pencil-square"></i> Alterar Cobrança</h6>
+
+            <form [formGroup]="formAlterar">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="input-valor-juros" class="form-label fw-bold">Valor de Juros</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="text" class="form-control" id="input-valor-juros" formControlName="valor_juros"
+                                currencyMask
+                                [options]="{ prefix: '', thousands: '.', decimal: ',', align: 'left', precision: 2 }"
+                                placeholder="0,00">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="input-valor-desconto" class="form-label fw-bold">Valor de Desconto</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="text" class="form-control" id="input-valor-desconto"
+                                formControlName="valor_desconto" currencyMask
+                                [options]="{ prefix: '', thousands: '.', decimal: ',', align: 'left', precision: 2 }"
+                                placeholder="0,00">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-light mt-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Valor original:</span>
+                        <strong>{{cobrancaSelecionada.valor_bruto | moneyBrl}}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2" *ngIf="formAlterar.value.valor_juros > 0">
+                        <span class="text-danger">+ Juros:</span>
+                        <strong class="text-danger">{{formAlterar.value.valor_juros | moneyBrl}}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2" *ngIf="formAlterar.value.valor_desconto > 0">
+                        <span class="text-success">- Desconto:</span>
+                        <strong class="text-success">{{formAlterar.value.valor_desconto | moneyBrl}}</strong>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <span class="fw-bold">Valor final:</span>
+                        <strong class="fs-5 text-primary">{{getValorTotalComAlteracoes() | moneyBrl}}</strong>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Formulário de Exclusão de Lançamentos -->
+        <div *ngIf="operacaoSelecionada === 'excluir'">
+            <button type="button" class="btn btn-sm btn-secondary mb-3" (click)="operacaoSelecionada = null">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </button>
+
+            <h6 class="mb-3"><i class="bi bi-trash"></i> Excluir Lançamentos</h6>
+
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <strong>Atenção:</strong> Ao excluir lançamentos, os valores serão estornados e a cobrança voltará ao status anterior.
+            </div>
+
+            <!-- Barra de progresso durante exclusão -->
+            <div class="mb-3" *ngIf="loadingModal && progressoExclusao.total > 0">
+                <div class="progress" style="height: 25px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-danger" 
+                         [style.width.%]="(progressoExclusao.atual / progressoExclusao.total) * 100">
+                        Excluindo {{progressoExclusao.atual}} de {{progressoExclusao.total}}
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="mb-0">Selecione os lançamentos para excluir:</h6>
+                <button type="button" class="btn btn-sm btn-outline-secondary" (click)="selecionarTodosLancamentos()">
+                    <i class="bi bi-check-all"></i> Selecionar todos
+                </button>
+            </div>
+
+            <div class="list-group">
+                <label class="list-group-item" *ngFor="let lancamento of cobrancaSelecionada.lancamentos; let i = index"
+                    [class.list-group-item-secondary]="lancamento.estornado"
+                    [class.disabled]="lancamento.estornado">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" [id]="'lanc-' + lancamento._id"
+                            [checked]="isLancamentoSelecionado(lancamento._id)"
+                            (change)="toggleLancamentoSelecionado(lancamento._id)"
+                            [disabled]="lancamento.estornado">
+                        <label class="form-check-label w-100" [for]="'lanc-' + lancamento._id">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>Lançamento #{{i + 1}}</strong>
+                                    <span class="badge bg-danger ms-2" *ngIf="lancamento.estornado">ESTORNADO</span>
+                                    <br>
+                                    <small class="text-muted">
+                                        {{lancamento.data_pagamento | dateSimple}} • {{lancamento.forma_pagamento}}
+                                    </small>
+                                </div>
+                                <strong class="text-success">{{lancamento.valor | moneyBrl}}</strong>
+                            </div>
+                        </label>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Confirmação de Reversão de Baixa -->
+        <div *ngIf="operacaoSelecionada === 'reverter-baixa'">
+            <button type="button" class="btn btn-sm btn-secondary mb-3" (click)="operacaoSelecionada = null">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </button>
+
+            <h6 class="mb-3"><i class="bi bi-arrow-counterclockwise"></i> Reverter Baixa</h6>
+
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <strong>Atenção:</strong> Ao reverter a baixa, a cobrança voltará ao status PENDENTE.
+            </div>
+
+            <p>Deseja realmente reverter a baixa desta cobrança?</p>
+        </div>
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">
+            Cancelar
+        </button>
+
+        <button type="button" class="btn btn-success" *ngIf="operacaoSelecionada === 'lancamento'"
+            [disabled]="formLancamento.invalid || loadingModal" (click)="processarLancamento()">
+            <span *ngIf="loadingModal" class="spinner-border spinner-border-sm me-2"></span>
+            <i class="bi bi-check-circle me-2" *ngIf="!loadingModal"></i>
+            Confirmar Pagamento
+        </button>
+
+        <button type="button" class="btn btn-primary" *ngIf="operacaoSelecionada === 'alterar'"
+            [disabled]="formAlterar.invalid || loadingModal" (click)="processarAlteracao()">
+            <span *ngIf="loadingModal" class="spinner-border spinner-border-sm me-2"></span>
+            <i class="bi bi-save me-2" *ngIf="!loadingModal"></i>
+            Salvar Alterações
+        </button>
+
+        <button type="button" class="btn btn-danger" *ngIf="operacaoSelecionada === 'excluir'"
+            [disabled]="lancamentosSelecionados.size === 0 || loadingModal" (click)="processarExclusaoLancamentos()">
+            <span *ngIf="loadingModal" class="spinner-border spinner-border-sm me-2"></span>
+            <i class="bi bi-trash me-2" *ngIf="!loadingModal"></i>
+            Excluir Selecionados ({{lancamentosSelecionados.size}})
+        </button>
+
+        <button type="button" class="btn btn-info" *ngIf="operacaoSelecionada === 'reverter-baixa'"
+            [disabled]="loadingModal" (click)="processarReversaoBaixa()">
+            <span *ngIf="loadingModal" class="spinner-border spinner-border-sm me-2"></span>
+            <i class="bi bi-arrow-counterclockwise me-2" *ngIf="!loadingModal"></i>
+            Confirmar Reversão
+        </button>
+    </div>
+</ng-template>
+
+<!-- Modal de Confirmação de Exclusão -->
+<ng-template #modalConfirmacao let-modal>
+    <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Confirmar Exclusão</h5>
+        <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"></button>
+    </div>
+    <div class="modal-body">
+        <p>Tem certeza que deseja excluir os lançamentos selecionados?</p>
+        <p class="text-danger"><strong>Esta ação não pode ser desfeita!</strong></p>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancelar</button>
+        <button type="button" class="btn btn-danger" (click)="modal.close('confirm')">
+            <i class="bi bi-trash me-2"></i> Sim, Excluir
+        </button>
+    </div>
+</ng-template>
+
+<!-- Modal de Baixa em Lote -->
+<ng-template #modalBaixa let-modal>
+    <div class="modal-header bg-success text-white">
+        <h5 class="modal-title"><i class="bi bi-check-circle"></i> Baixa em Lote</h5>
+        <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"></button>
+    </div>
+    <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            Selecione as cobranças que deseja dar baixa automaticamente.
+        </div>
+
+        <!-- Barra de progresso -->
+        <div class="mb-3" *ngIf="loadingBaixa && progressoBaixa.total > 0">
+            <div class="progress" style="height: 25px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
+                     [style.width.%]="(progressoBaixa.atual / progressoBaixa.total) * 100">
+                    Processando {{progressoBaixa.atual}} de {{progressoBaixa.total}}
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="selecionarTodasCobrancasBaixa()">
+                <i class="bi bi-check-all"></i> Selecionar todas
+            </button>
+            <div *ngIf="cobrancasSelecionadasBaixa.size > 0">
+                <strong>Total Selecionado:</strong>
+                <span class="fs-5 text-success ms-2">{{getTotalValorBaixa() | moneyBrl}}</span>
+            </div>
+        </div>
+
+        <div class="list-group">
+            <label class="list-group-item" *ngFor="let cobranca of getCobrancasPendentes()">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" [id]="'cob-' + cobranca._id"
+                        [checked]="isCobrancaSelecionadaBaixa(cobranca._id)"
+                        (change)="toggleCobrancaBaixa(cobranca._id)">
+                    <label class="form-check-label w-100" [for]="'cob-' + cobranca._id">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>{{cobranca.nota?.numero_nota}} - {{cobranca.forma_pagamento}}</strong>
+                                <br>
+                                <small class="text-muted">
+                                    Vencimento: {{cobranca.data_vencimento | dateSimple}} •
+                                    Parcela {{cobranca.parcela}}/{{cobranca.total_parcelas}}
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <strong class="text-primary d-block">{{getValorRestante(cobranca) | moneyBrl}}</strong>
+                                <small class="text-muted">Restante</small>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </label>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()" [disabled]="loadingBaixa">
+            Cancelar
+        </button>
+        <button type="button" class="btn btn-success" 
+            [disabled]="cobrancasSelecionadasBaixa.size === 0 || loadingBaixa" 
+            (click)="processarBaixaEmLote()">
+            <span *ngIf="loadingBaixa" class="spinner-border spinner-border-sm me-2"></span>
+            <i class="bi bi-check-circle me-2" *ngIf="!loadingBaixa"></i>
+            Processar Baixa ({{cobrancasSelecionadasBaixa.size}})
+        </button>
+    </div>
+</ng-template>
+
+<!-- Modal de Confirmação de Baixa -->
+<ng-template #modalConfirmacaoBaixa let-modal>
+    <div class="modal-header bg-success text-white">
+        <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Confirmar Baixa em Lote</h5>
+        <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"></button>
+    </div>
+    <div class="modal-body">
+        <p>Tem certeza que deseja dar baixa em <strong>{{cobrancasSelecionadasBaixa.size}}</strong> cobrança(s)?</p>
+        <p>Valor total: <strong class="text-success">{{getTotalValorBaixa() | moneyBrl}}</strong></p>
+        <p class="text-warning"><strong>Esta operação marcará todas as cobranças como baixadas.</strong></p>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancelar</button>
+        <button type="button" class="btn btn-success" (click)="modal.close('confirm')">
+            <i class="bi bi-check-circle me-2"></i> Sim, Processar
+        </button>
+    </div>
+</ng-template>

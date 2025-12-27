@@ -1,0 +1,45 @@
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="fw-bold ">Clientes e Fornecedores</h1>
+        </div>
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <form [formGroup]="form" (submit)="query()" class="p-3">
+                    <div class="d-flex flex-row gap-2">
+                        <button type="button" class="btn btn-primary" [routerLink]="['/admin/pessoas/form']">
+                            <i class="bi bi-plus-lg me-2"></i> Adicionar
+                        </button>
+                    </div>
+                </form>
+                <div class="px-3 table-responsive">
+                    <table-template [total]="data.total" [loading]="loading" [paginacaoAtiva]="true">
+                        <table class="table table-borderless table-hover border-bottom">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Tipo</th>
+                                    <th>CPF/CNPJ</th>
+                                    <th class="text-end">
+                                        Criado por
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let item of data.lista" class="cursor-pointer"
+                                    [routerLink]="['/admin/pessoas/form']" [queryParams]="{ id: item._id }">
+                                    <td>{{item.nome}}</td>
+                                    <td>{{item.tipos}}</td>
+                                    <td>{{item.documento |cpfCnpj}}</td>
+                                    <td class="text-end">
+                                        {{item.criado_por?.usuario | userInfo}} em {{item.criado_por.data_hora | dateFromNow}}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </table-template>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

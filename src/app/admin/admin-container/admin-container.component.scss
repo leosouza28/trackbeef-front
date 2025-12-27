@@ -14,7 +14,7 @@
   top: 8px;
   bottom: 8px;
   left: 8px;
-  width: 15.3rem;
+  width: 18rem;
   background-color: #f8f9fa;
   user-select: none;
   overflow-y: auto;
@@ -43,10 +43,10 @@
   // font-family: "Fredoka", sans-serif;
 }
 .sidebar .sidebar-header {
-  background-image: url("/assets/imgs/logo-header.png");
+  background-image: url("/assets/imgs/TRACKBEEF_BRAND_NOT_2.png");
   height: 80px;
   width: 180px;
-  background-size: cover;
+  background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
   margin: 0 auto;
@@ -57,10 +57,10 @@
 }
 
 .navbar-brand {
-  background-image: url("/assets/imgs/logo-header.png");
+  background-image: url("/assets/imgs/TRACKBEEF_BRAND_NOT_2.png");
   width: 140px;
   height: 60px;
-  background-size: cover;
+  background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
   border-radius: 1rem;
@@ -80,7 +80,7 @@
     margin-left: 0;
   }
   .bg-content {
-    padding-left: 18rem;
+    padding-left: 20rem;
     padding-right: 2rem;
   }
 }

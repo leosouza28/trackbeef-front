@@ -1,0 +1,314 @@
+<div class="container-fluid" *ngIf="!loading && venda">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="fw-bold mb-0">Visualizar Venda</h1>
+                <div class="d-flex gap-2" *ngIf="!isMobile">
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-success" (click)="gerarPDFA4()" [disabled]="gerandoPDF">
+                            <i class="bi bi-file-pdf me-2"></i>
+                            <span *ngIf="!gerandoPDF">PDF A4</span>
+                            <span *ngIf="gerandoPDF">Gerando...</span>
+                        </button>
+                        <button class="btn btn-info text-white" (click)="gerarPDFBobina80mm()" [disabled]="gerandoPDF">
+                            <i class="bi bi-receipt me-2"></i>
+                            <span *ngIf="!gerandoPDF">PDF 80mm</span>
+                            <span *ngIf="gerandoPDF">Gerando...</span>
+                        </button>
+                    </div>
+                    <button class="btn btn-outline-secondary" (click)="back()">
+                        <i class="bi bi-arrow-left me-2"></i>Voltar
+                    </button>
+                </div>
+                <button class="btn btn-outline-secondary" (click)="back()" *ngIf="isMobile">
+                    <i class="bi bi-arrow-left me-2"></i>Voltar
+                </button>
+            </div>
+        </div>
+
+        <!-- Cabeçalho da Venda -->
+        <div class="col-12 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12 col-md-6 col-lg-2">
+                            <div class="mb-3">
+                                <small class="text-muted d-block">Código da Venda</small>
+                                <h4 class="mb-0 text-primary">#{{ venda.codigo }}</h4>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 col-lg-2">
+                            <div class="mb-3">
+                                <small class="text-muted d-block">Data da Venda</small>
+                                <strong>{{ venda.data | dateSimple }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 col-lg-2">
+                            <div class="mb-3">
+                                <small class="text-muted d-block">Status</small>
+                                <render-badge [badgeText]="venda.status"></render-badge>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 col-lg-2">
+                            <div class="mb-3">
+                                <small class="text-muted d-block">Status Entrega</small>
+                                <render-badge [badgeText]="venda.status_entrega"></render-badge>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 col-lg-2">
+                            <div class="mb-3">
+                                <small class="text-muted d-block">Tipo de Venda</small>
+                                <span class="badge" [ngClass]="venda.venda_na_conta ? 'bg-info' : 'bg-success'">
+                                    {{ venda.venda_na_conta ? 'Na Conta' : 'À Vista' }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 col-lg-2">
+                            <div class="mb-3">
+                                <small class="text-muted d-block">Criado por</small>
+                                <strong>{{ venda.criado_por?.usuario?.nome }}</strong>
+                                <small class="text-muted d-block">{{ venda.criado_por?.data_hora | date:'dd/MM/yyyy
+                                    HH:mm' }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informações do Cliente -->
+        <div class="col-12 col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-person me-2"></i>Cliente</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <strong>{{ venda.cliente?.nome }}</strong>
+                    </div>
+                    <div class="mb-2" *ngIf="venda.cliente?.razao_social">
+                        <small class="text-muted">Razão Social:</small>
+                        <div>{{ venda.cliente.razao_social }}</div>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Documento:</small>
+                        <div>{{ venda.cliente?.documento }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Endereço de Entrega -->
+        <div class="col-12 col-lg-4 mb-4" *ngIf="venda.endereco">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Endereço de Entrega</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <strong>{{ venda.endereco.logradouro }}, {{ venda.endereco.numero }}</strong>
+                    </div>
+                    <div class="mb-2" *ngIf="venda.endereco.complemento">
+                        <small class="text-muted">Complemento:</small>
+                        <div>{{ venda.endereco.complemento }}</div>
+                    </div>
+                    <div class="mb-2">
+                        <div>{{ venda.endereco.bairro }}</div>
+                    </div>
+                    <div class="mb-2">
+                        <div>{{ venda.endereco.cidade }} - {{ venda.endereco.estado }}</div>
+                    </div>
+                    <div>
+                        <small class="text-muted">CEP:</small>
+                        <div>{{ venda.endereco.cep }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumo Financeiro -->
+        <div class="col-12 col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-calculator me-2"></i>Resumo Financeiro</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Valor Bruto:</span>
+                        <strong>{{ venda.valor_bruto | moneyBrl }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2 text-warning" *ngIf="venda.valor_desconto > 0">
+                        <span>Desconto:</span>
+                        <strong>- {{ venda.valor_desconto | moneyBrl }}</strong>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between fs-5 mb-3">
+                        <span><strong>Total:</strong></span>
+                        <strong class="text-success">{{ venda.valor_liquido | moneyBrl }}</strong>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-2">
+                        <small class="text-muted">Quantidade de Itens:</small>
+                        <strong>{{ venda.itens?.length }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Itens da Venda -->
+        <div class="col-12 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-list me-2"></i>Itens da Venda</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th colspan="3">Produto</th>
+                                    <th class="text-end">Quantidade</th>
+                                    <th class="text-end">Preço Unit.</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let item of venda.itens; let i = index">
+                                    <td colspan="3">
+                                        <div>
+                                            <strong>{{ item.produto?.nome }}</strong>
+                                            
+                                            <!-- Informações da Peça -->
+                                            <!-- <div *ngIf="item.peca" class="mt-2">
+                                                <small class="text-muted">
+                                                    <strong>{{ item.peca.peso }} kg</strong>
+                                                </small>
+                                            </div> -->
+                                        </div>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong>{{ item.quantidade.toFixed(2) }}&nbsp;{{ item.unidade_saida }}</strong>
+                                        <!-- <small class="text-muted d-block"></small> -->
+                                    </td>
+                                    <td class="text-end">
+                                        {{ item.preco_unitario | moneyBrl }}
+                                        <!-- <small class="text-muted d-block" *ngIf="item.peca">
+                                            Custo: {{ item.peca.preco_custo_unitario | moneyBrl }}
+                                        </small> -->
+                                    </td>
+                                    <td class="text-end">
+                                        <strong>{{ item.valor_total | moneyBrl }}</strong>
+                                        <!-- <small class="text-muted d-block" *ngIf="item.peca">
+                                            Custo Total: {{ item.peca.valor_custo | moneyBrl }}
+                                        </small> -->
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="3" class="text-start"><strong>TOTAL</strong></td>
+                                    <td class="text-end"><strong>{{ venda.itens?.length }}</strong></td>
+                                    <td></td>
+                                    <td class="text-end">
+                                        <strong class="text-success fs-5">{{ venda.valor_liquido | moneyBrl }}</strong>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formas de Pagamento -->
+        <div class="col-12 col-lg-8 mb-4" *ngIf="venda.parcelas && venda.parcelas.length > 0">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="bi bi-credit-card me-2"></i>Formas de Pagamento</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Forma de Pagamento</th>
+                                    <th class="text-center">Parcela</th>
+                                    <th class="text-center">Vencimento</th>
+                                    <th class="text-end">Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let parcela of venda.parcelas">
+                                    <td>
+                                        <div>
+                                            <strong>{{ parcela.forma_pagamento?.nome }}</strong>
+                                            <span class="badge ms-2"
+                                                [ngClass]="parcela.forma_pagamento?.avista ? 'bg-success' : 'bg-secondary'">
+                                                {{ parcela.forma_pagamento?.avista ? 'À Vista' : 'À Prazo' }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        {{ parcela.numero_parcela }} de {{ parcela.total_parcelas }}
+                                    </td>
+                                    <td class="text-center">
+                                        {{ parcela.data_vencimento | dateSimple }}
+                                    </td>
+                                    <td class="text-end">
+                                        <strong>{{ parcela.valor | moneyBrl }}</strong>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informação quando não há parcelas -->
+        <div class="col-12 col-lg-8 mb-4" *ngIf="!venda.parcelas || venda.parcelas.length === 0">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="bi bi-credit-card me-2"></i>Formas de Pagamento</h5>
+                </div>
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-info-circle text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2 mb-0">
+                        {{ venda.venda_na_conta ? 'Venda lançada na conta do cliente' : 'Nenhuma forma de pagamento registrada' }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Observações -->
+        <div class="col-12 col-lg-4 mb-4" *ngIf="venda.observacao">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="bi bi-chat-text me-2"></i>Observações</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ venda.observacao }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Botão Flutuante para Mobile -->
+<button 
+    *ngIf="isMobile && !loading && venda" 
+    class="btn btn-success btn-floating"
+    (click)="gerarPDFA4()" 
+    [disabled]="gerandoPDF">
+    <i class="bi" [ngClass]="gerandoPDF ? 'bi-hourglass-split' : 'bi-file-pdf'"></i>
+</button>
+
+<!-- Loading -->
+<div class="d-flex justify-content-center align-items-center" style="min-height: 50vh;" *ngIf="loading">
+    <div class="text-center">
+        <div class="spinner-border text-primary mb-3" role="status">
+            <span class="visually-hidden">Carregando...</span>
+        </div>
+        <p class="text-muted">Carregando dados da venda...</p>
+    </div>
+</div>

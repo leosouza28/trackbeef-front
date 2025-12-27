@@ -1,0 +1,304 @@
+<div class="container-fluid" *ngIf="!loading && data">
+    <!-- Header com informações do produto -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-box-seam fs-2 text-primary me-3"></i>
+                                <div>
+                                    <h4 class="mb-0 fw-bold">{{ data.produto.nome }}</h4>
+                                    <small class="text-muted">
+                                        SKU: {{ data.produto.sku }} | {{ data.produto.categoria }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <div class="mb-2">
+                                <small class="text-muted d-block">Almoxarifado</small>
+                                <strong class="text-primary">
+                                    <i class="bi bi-building me-1"></i>
+                                    {{ data.almoxarifado.nome }}
+                                </strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Saldo atual -->
+                    <div class="row mt-3 pt-3 border-top" *ngIf="data.produto_estoque">
+                        <div class="col-12 col-lg-6 col-sm-6">
+                            <div class="text-center p-4 bg-light rounded">
+                                <i class="bi bi-boxes text-success fs-2"></i>
+                                <h2 class="mb-0 mt-2 text-success fw-bold">
+                                    {{ (data.produto_estoque.saldo_estoque || 0)?.toFixed(2) }} {{ data.produto.unidade
+                                    }}
+                                </h2>
+                                <small class="text-muted">Saldo Atual em Estoque</small>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 col-sm-6">
+                            <div class="text-center p-4 bg-light rounded">
+                                <i class="bi bi-boxes text-warning fs-2"></i>
+                                <h2 class="mb-0 mt-2 text-warning fw-bold">
+                                    {{ (data.produto_estoque.saldo_estoque_reservado || 0)?.toFixed(2) }} {{
+                                    data.produto.unidade }}
+                                </h2>
+                                <small class="text-muted">Saldo Reservado</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Última entrada -->
+                    <div class="row mt-3 pt-3 border-top" *ngIf="data.produto.ultima_nota_entrada">
+                        <div class="col-12">
+                            <small class="text-muted">
+                                <i class="bi bi-clock-history me-1"></i>
+                                Última entrada: Nota <strong>{{ data.produto.ultima_nota_entrada.numero_nota }}</strong>
+                                em {{ data.produto.ultima_nota_entrada.data_nota | dateSimple }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs: Histórico e Peças -->
+    <div class="row">
+        <div class="col-12">
+            <ul ngbNav #nav="ngbNav" class="nav-tabs">
+                <!-- Tab: Histórico -->
+                <li [ngbNavItem]="1">
+                    <button ngbNavLink>
+                        <i class="bi bi-clock-history me-2"></i>
+                        Histórico de Movimentações
+                        <span class="badge bg-primary ms-2">{{ data.historico.length }}</span>
+                    </button>
+                    <ng-template ngbNavContent>
+                        <div class="card border-0 shadow-sm mt-3">
+                            <div class="card-body">
+                                <!-- Cards de movimentações -->
+                                <div class="row g-3">
+                                    <div class="col-12" *ngFor="let mov of data.historico">
+                                        <div class="card border-start border-2" [ngClass]="{
+                                            'border-success': mov.tipo_movimento === 'ENTRADA',
+                                            'border-danger': mov.tipo_movimento === 'SAIDA',
+                                            'border-warning': mov.tipo_movimento === 'AJUSTE'
+                                        }">
+                                            <div class="card-body">
+                                                <div class="row align-items-center">
+                                                    <!-- Data e hora -->
+                                                    <div class="col-6 col-md-2">
+                                                        <small class="text-muted d-block">
+                                                            <i class="bi bi-calendar3 me-1"></i>Data
+                                                        </small>
+                                                        <strong class="d-block">{{ mov.createdAt | date:'dd/MM/yyyy'
+                                                            }}</strong>
+                                                        <small class="text-muted">{{ mov.createdAt | date:'HH:mm:ss'
+                                                            }}</small>
+                                                    </div>
+
+                                                    <!-- Tipo de movimento -->
+                                                    <div class="col-6 col-md-2">
+                                                        <small class="text-muted d-block">
+                                                            <i class="bi bi-arrow-left-right me-1"></i>Tipo
+                                                        </small>
+                                                        <span class="badge" [ngClass]="{
+                                                            'bg-success': mov.tipo_movimento === 'ENTRADA',
+                                                            'bg-danger': mov.tipo_movimento === 'SAIDA',
+                                                            'bg-warning text-dark': mov.tipo_movimento === 'AJUSTE'
+                                                        }">
+                                                            <i class="bi" [ngClass]="{
+                                                                'bi-arrow-down-circle': mov.tipo_movimento === 'ENTRADA',
+                                                                'bi-arrow-up-circle': mov.tipo_movimento === 'SAIDA',
+                                                                'bi-arrow-repeat': mov.tipo_movimento === 'AJUSTE'
+                                                            }"></i>
+                                                            {{ mov.tipo_movimento }}
+                                                        </span>
+                                                    </div>
+
+                                                    <!-- Quantidade -->
+                                                    <div class="col-6 col-md-2 mt-2 mt-md-0">
+                                                        <small class="text-muted d-block">
+                                                            <i class="bi bi-box me-1"></i>Quantidade
+                                                        </small>
+                                                        <h5 class="mb-0" [ngClass]="{
+                                                            'text-success': mov.tipo_movimento === 'ENTRADA',
+                                                            'text-danger': mov.tipo_movimento === 'SAIDA'
+                                                        }">
+                                                            {{ mov.quantidade.toFixed(2) }} {{ data.produto.unidade }}
+                                                        </h5>
+                                                    </div>
+
+                                                    <!-- Origem -->
+                                                    <div class="col-6 col-md-2 mt-2 mt-md-0">
+                                                        <small class="text-muted d-block">
+                                                            <i class="bi bi-file-text me-1"></i>Origem
+                                                        </small>
+                                                        <span class="badge bg-secondary">{{ mov.origem_movimento
+                                                            }}</span>
+                                                    </div>
+
+                                                    <!-- Documento -->
+                                                    <div class="col-6 col-md-2 mt-2 mt-md-0">
+                                                        <small class="text-muted d-block">
+                                                            <i class="bi bi-receipt me-1"></i>Documento
+                                                        </small>
+                                                        <span *ngIf="mov.nota_entrada">
+                                                            <strong class="d-block">Nota {{ mov.nota_entrada.numero_nota
+                                                                }}</strong>
+                                                            <small class="text-muted">
+                                                                {{ mov.nota_entrada.data_nota | dateSimple }}
+                                                            </small>
+                                                        </span>
+                                                        <span *ngIf="mov.venda">
+                                                            <strong class="d-block">Venda {{ mov.venda.codigo
+                                                                }}</strong>
+                                                            <small class="text-muted">
+                                                                {{ mov.venda.data | dateSimple }}
+                                                            </small>
+                                                        </span>
+                                                        <span *ngIf="!mov.nota_entrada && !mov.venda"
+                                                            class="text-muted">
+                                                            -
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div *ngIf="data.historico.length === 0" class="text-center py-5">
+                                    <i class="bi bi-inbox fs-1 text-muted"></i>
+                                    <p class="text-muted mt-2">Nenhuma movimentação encontrada</p>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-template>
+                </li>
+
+                <!-- Tab: Peças -->
+                <li [ngbNavItem]="2" *ngIf="data.produto.tipo_saida === 'ESTOQUE PECA'">
+                    <button ngbNavLink>
+                        <i class="bi bi-box-seam me-2"></i>
+                        Peças em Estoque e Reservadas
+                        <span class="badge bg-success ms-2">{{ data.pecas.length }}</span>
+                    </button>
+                    <ng-template ngbNavContent>
+                        <div class="card border-0 shadow-sm mt-3">
+                            <div class="card-body">
+                                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+                                    <div class="col" *ngFor="let peca of data.pecas; let i = index">
+                                        <div class="card h-100 border-success" [ngClass]="{
+                                            'bg-success-subtle': peca.tipo_movimento === 'ENTRADA'
+                                        }">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                                    <h5 class="card-title mb-0">
+                                                        <i class="bi bi-box-seam text-success me-2"></i>
+                                                        Peça #{{ i + 1 }}
+                                                    </h5>
+                                                    <span class="badge bg-success">
+                                                        {{ peca.peso | number:'1.2-2' }} {{ data.produto.unidade }}
+                                                    </span>
+                                                </div>
+
+                                                <hr class="my-2">
+
+                                                <div class="d-flex flex-column gap-2">
+
+                                                    <div class="d-flex justify-content-between">
+                                                        <small class="text-muted">
+                                                            <i class="bi bi-calendar3 me-1"></i>Status:
+                                                        </small>
+                                                        <small class="fw-semibold">
+                                                            {{ peca.status_estoque }}
+                                                        </small>
+                                                    </div>
+
+                                                    <div class="d-flex justify-content-between">
+                                                        <small class="text-muted">
+                                                            <i class="bi bi-calendar3 me-1"></i>Entrada:
+                                                        </small>
+                                                        <small class="fw-semibold">
+                                                            {{ peca.nota.data_nota | dateSimple }}
+                                                        </small>
+                                                    </div>
+
+                                                    <div class="d-flex justify-content-between" *ngIf="peca.nota">
+                                                        <small class="text-muted">
+                                                            <i class="bi bi-file-earmark-text me-1"></i>Nota:
+                                                        </small>
+                                                        <small class="fw-semibold">
+                                                            {{ peca.nota.numero_nota }}
+                                                        </small>
+                                                    </div>
+
+                                                    <div class="d-flex justify-content-between">
+                                                        <small class="text-muted">
+                                                            <i class="bi bi-building me-1"></i>Almoxarifado:
+                                                        </small>
+                                                        <small class="fw-semibold">
+                                                            {{ peca.almoxarifado.nome }}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="card-footer bg-transparent border-success">
+                                                <small class="text-muted">
+                                                    <i class="bi bi-info-circle me-1"></i>
+                                                    ID: {{ peca._id }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div *ngIf="data.pecas.length === 0" class="text-center py-5">
+                                    <i class="bi bi-inbox fs-1 text-muted"></i>
+                                    <p class="text-muted mt-2">Nenhuma peça em estoque</p>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-template>
+                </li>
+            </ul>
+
+            <div [ngbNavOutlet]="nav"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading -->
+<div class="container-fluid" *ngIf="loading">
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                    <p class="text-muted mt-3">Carregando histórico do produto...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sem dados -->
+<div class="container-fluid" *ngIf="!loading && !data">
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-exclamation-triangle fs-1 text-warning"></i>
+                    <p class="text-muted mt-3">Nenhum produto selecionado</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

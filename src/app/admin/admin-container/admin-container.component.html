@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-lg bg-secondary d-block d-lg-none shadow-sm border-bottom">
+<nav class="navbar navbar-expand-lg bg-white d-block d-lg-none shadow-sm border-bottom">
     <div class="container-fluid">
         <a class="navbar-brand" [routerLink]="['/admin/inicio']"></a>
         <button class="navbar-toggler" type="button" (click)="openMenu(content)"
@@ -46,10 +46,10 @@
     </div>
 
     <router-outlet></router-outlet>
-    <button class="btn btn-warning position-fixed bottom-0 end-0 m-3" (click)="turnOnNotifications()"
+    <!-- <button class="btn btn-warning position-fixed bottom-0 end-0 m-3" (click)="turnOnNotifications()"
         [disabled]="!isNotificationAvailables" *ngIf="navigatorSupportsNotifications">
         <i class="bi bi-bell me-2"></i> Notificações {{isNotificationRegistered ? '(Ativadas)' : ''}}
-    </button>
+    </button> -->
 </div>
 
 <ng-template #content let-offcanvas>

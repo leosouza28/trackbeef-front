@@ -1,0 +1,1027 @@
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="fw-bold mb-0">Entrada de Estoque</h1>
+                <div class="d-flex gap-2">
+                    <app-help-button helpKey="entrada-notas" size="md"></app-help-button>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-primary" *ngIf="temProdutosOCR()"
+                            (click)="visualizarProdutosOCR()" title="Visualizar produtos OCR">
+                            <i class="bi bi-eye"></i> OCR ({{produtosOCR.length}})
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" *ngIf="temProdutosOCR()"
+                            (click)="limparProdutosOCR()" title="Limpar dados OCR">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" (click)="abrirModalOcr()"
+                            title="Importar dados de foto da nota">
+                            <i class="bi bi-camera"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dados da Nota -->
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Dados da Nota</h5>
+                </div>
+                <div class="card-body">
+                    <form [formGroup]="formNota">
+                        <div class="row g-3">
+                            <div class="col-12 col-lg-3">
+                                <label for="data_nota" class="form-label fw-bold">Data da Nota *</label>
+                                <input type="date" class="form-control" id="data_nota" formControlName="data_nota">
+                            </div>
+                            <!-- Fornecedor -->
+                            <div class="col-12 col-lg-5">
+                                <label class="form-label fw-bold">Fornecedor *</label>
+                                <div class="card border" [class.border-success]="fornecedorSelecionado"
+                                    style="cursor: pointer;" (click)="abrirListaFornecedores()">
+                                    <div class="card-body py-2">
+                                        <div *ngIf="!fornecedorSelecionado" class="text-muted">
+                                            <i class="bi bi-person-plus"></i> Clique para selecionar um fornecedor
+                                        </div>
+                                        <div *ngIf="fornecedorSelecionado">
+                                            <strong>{{fornecedorSelecionado.nome}}</strong>
+                                            <br>
+                                            <small class="text-muted">{{fornecedorSelecionado.documento}}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Almoxarifado -->
+                            <div class="col-12 col-lg-4">
+                                <label class="form-label fw-bold">Almoxarifado *</label>
+                                <div class="card border" [class.border-success]="almoxarifadoSelecionado"
+                                    style="cursor: pointer;" (click)="abrirListaAlmoxarifados()">
+                                    <div class="card-body py-2">
+                                        <div *ngIf="!almoxarifadoSelecionado" class="text-muted">
+                                            <i class="bi bi-building"></i> Clique para selecionar um almoxarifado
+                                        </div>
+                                        <div *ngIf="almoxarifadoSelecionado">
+                                            <strong>{{almoxarifadoSelecionado.nome}}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-lg-2">
+                                <label for="numero_nota" class="form-label fw-bold">Identificador *</label>
+                                <input type="text" class="form-control" id="numero_nota" formControlName="numero_nota"
+                                    placeholder="123456">
+                            </div>
+                            <div class="col-12 col-lg-2">
+                                <label for="qtd_animais" class="form-label fw-bold">Qtd&nbsp;Animais</label>
+                                <input type="text" inputmode="numeric" class="form-control" id="qtd_animais"
+                                    formControlName="qtd_animais" currencyMask placeholder="Qtd de Animais"
+                                    [options]="{precision: 0}">
+                            </div>
+                            <div class="col-12 col-lg-3">
+                                <label for="peso_animais" class="form-label fw-bold">Peso (KG)</label>
+                                <input type="text" inputmode="numeric" class="form-control" id="peso_animais"
+                                    formControlName="peso_animais" currencyMask placeholder="Peso (KG)">
+                            </div>
+                            <div class="col-12 col-lg-3">
+                                <label for="valor_pago_animais" class="form-label fw-bold">Valor&nbsp;Pago</label>
+                                <input type="text" inputmode="numeric" class="form-control" id="valor_pago_animais"
+                                    formControlName="valor_pago_animais" currencyMask placeholder="Valor Pago">
+                            </div>
+                            <div class="col-12 col-lg-2">
+                                <label for="valor_frete" class="form-label fw-bold">Frete</label>
+                                <input type="text" inputmode="numeric" class="form-control" id="valor_frete"
+                                    formControlName="valor_frete" currencyMask placeholder="Frete">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seleção de Produtos -->
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card border-0 shadow" [class.d-md-block]="true" [class.d-none]="produtoSelecionado"
+                *ngIf="!produtoSelecionado">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Selecione o Produto</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Produto Selecionado ou Botão para Selecionar -->
+                    <div>
+                        <button type="button" class="btn btn-lg btn-outline-success w-100"
+                            (click)="abrirListaProdutos()">
+                            <i class="bi bi-box-seam"></i> Clique para selecionar um produto
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Versão Desktop e Mobile -->
+            <div *ngIf="produtoSelecionado">
+                <div class="card border-0 shadow">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Produto Selecionado</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-success mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="mb-0">
+                                        <i class="bi bi-box-seam"></i> {{produtoSelecionado.produto.nome}}
+                                    </h5>
+                                    <small>SKU: {{produtoSelecionado.produto.sku}} | Unidade:
+                                        {{produtoSelecionado.produto.unidade}}</small>
+                                </div>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-outline-dark"
+                                        (click)="abrirListaProdutos()">
+                                        <i class="bi bi-arrow-left-right"></i> Trocar Produto
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                        (click)="limparProdutoSelecionado()">
+                                        <i class="bi bi-x-circle"></i> Limpar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form [formGroup]="formLancamento">
+                            <div class="row g-3">
+                                <div class="col-12 col-md-4">
+                                    <label class="form-label fw-bold">Preço de Custo (unitário)</label>
+                                    <div class="input-group input-group-lg">
+                                        <span class="input-group-text">R$</span>
+                                        <input class="form-control" formControlName="preco_custo" currencyMask>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label for="peso" class="form-label fw-bold">Digite o Peso/Quantidade e tecle
+                                        ENTER</label>
+                                    <input type="text" inputmode="numeric" class="form-control form-control-lg"
+                                        id="peso" formControlName="peso" currencyMask
+                                        [options]="{ precision: 2, allowNegative: false, decimal: ',' }" autofocus
+                                        (keyup.enter)="adicionarLancamento($event)">
+                                </div>
+                                <div class="col-12 col-md-2 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-success btn-lg w-100"
+                                        [disabled]="!formLancamento.get('peso')?.value"
+                                        (click)="adicionarLancamento($event)">
+                                        <i class="bi bi-plus-circle"></i> Adicionar
+                                    </button>
+                                </div>
+
+                                <!-- Botão para carregar peças do OCR -->
+                                <div class="col-12" *ngIf="temProdutosOCR()">
+                                    <button type="button" class="btn btn-info btn-lg w-100"
+                                        (click)="abrirListaProdutosOCR()">
+                                        <i class="bi bi-list-check"></i> Adicionar Peças da Nota OCR
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <!-- Lançamentos -->
+                        <div class="mt-3" *ngIf="produtoSelecionado.lancamentos.length > 0">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="fw-bold mb-0">
+                                    <i class="bi bi-list-check"></i> Lançamentos
+                                </h6>
+                                <span class="badge bg-info">
+                                    {{produtoSelecionado.lancamentos.length}} item(ns)
+                                </span>
+                            </div>
+
+                            <!-- Tabela para Desktop -->
+                            <div class="table-responsive d-none d-md-block">
+                                <table class="table table-sm table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Peso/Qtd</th>
+                                            <th>Valor</th>
+                                            <th style="width: 120px">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr *ngFor="let lanc of produtoSelecionado.lancamentos; let i = index">
+                                            <td>{{i + 1}}</td>
+                                            <td>{{lanc.peso.toFixed(2)}} {{produtoSelecionado.produto.unidade}}</td>
+                                            <td>R$ {{lanc.valor_total.toFixed(2)}}</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button type="button" class="btn btn-primary" title="Corrigir"
+                                                        (click)="abrirModalCorrigir(produtosLancados.indexOf(produtoSelecionado!), i)">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning" title="Trocar Produto"
+                                                        (click)="abrirModalTrocarProduto(produtosLancados.indexOf(produtoSelecionado!), i)">
+                                                        <i class="bi bi-arrow-left-right"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-danger" title="Excluir"
+                                                        (click)="removerLancamento(produtosLancados.indexOf(produtoSelecionado!), i)">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot class="table-info">
+                                        <tr>
+                                            <th>Total:</th>
+                                            <th>{{produtoSelecionado.total_peso.toFixed(2)}}
+                                                {{produtoSelecionado.produto.unidade}}</th>
+                                            <th>R$ {{produtoSelecionado.total_valor.toFixed(2)}}</th>
+                                            <th></th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+
+                            <!-- Lista para Mobile -->
+                            <div class="d-md-none">
+                                <div class="list-group">
+                                    <div class="list-group-item"
+                                        *ngFor="let lanc of produtoSelecionado.lancamentos; let i = index">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span class="badge bg-primary me-2">#{{i + 1}}</span>
+                                                <strong>{{lanc.peso.toFixed(2)}}
+                                                    {{produtoSelecionado.produto.unidade}}</strong>
+                                            </div>
+                                            <div class="text-end">
+                                                <div class="fw-bold text-success mb-1">R$
+                                                    {{lanc.valor_total.toFixed(2)}}
+                                                </div>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button type="button" class="btn btn-primary" title="Corrigir"
+                                                        (click)="abrirModalCorrigir(produtosLancados.indexOf(produtoSelecionado!), i)">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning" title="Trocar Produto"
+                                                        (click)="abrirModalTrocarProduto(produtosLancados.indexOf(produtoSelecionado!), i)">
+                                                        <i class="bi bi-arrow-left-right"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-danger" title="Excluir"
+                                                        (click)="removerLancamento(produtosLancados.indexOf(produtoSelecionado!), i)">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="alert alert-success mt-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong>Total:</strong>
+                                        <div class="text-end">
+                                            <div>{{produtoSelecionado.total_peso.toFixed(2)}}
+                                                {{produtoSelecionado.produto.unidade}}</div>
+                                            <div class="text-success fw-bold">R$
+                                                {{produtoSelecionado.total_valor.toFixed(2)}}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumo Geral -->
+    <div class="row mt-3" *ngIf="produtosLancados.length > 0">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Resumo</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Lista Compacta de Produtos -->
+                    <div class="mb-3">
+                        <div *ngFor="let prod of produtosLancados; let i = index" class="card mb-2 border-start border-3"
+                             [class.border-success]="prod.rendimento_percentual !== undefined && prod.rendimento_percentual >= 25"
+                             [class.border-warning]="prod.rendimento_percentual !== undefined && prod.rendimento_percentual < 25 && prod.rendimento_percentual >= 15"
+                             [class.border-secondary]="prod.rendimento_percentual === undefined || prod.rendimento_percentual < 15">
+                            <div class="card-body p-2">
+                                <!-- Cabeçalho do Produto - Clicável para expandir/recolher -->
+                                <div class="d-flex justify-content-between align-items-center cursor-pointer" 
+                                     (click)="prod.expanded = !prod.expanded">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <i class="bi" [class.bi-chevron-down]="prod.expanded" [class.bi-chevron-right]="!prod.expanded"></i>
+                                            <strong class="text-dark">{{prod.produto.nome}}</strong>
+                                            <span class="badge bg-light text-dark border">
+                                                {{prod.lancamentos.length}} lanç.
+                                            </span>
+                                            <span *ngIf="prod.rendimento_percentual !== undefined" 
+                                                  class="badge"
+                                                  [class.bg-success]="prod.rendimento_percentual >= 25"
+                                                  [class.bg-warning]="prod.rendimento_percentual < 25 && prod.rendimento_percentual >= 15"
+                                                  [class.bg-secondary]="prod.rendimento_percentual < 15">
+                                                <i class="bi bi-graph-up-arrow"></i> {{prod.rendimento_percentual.toFixed(1)}}%
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-3 align-items-center" style="font-size: 0.9rem;">
+                                        <span class="badge bg-primary">{{prod.total_peso.toFixed(2)}}</span>
+                                        <strong class="text-success">{{prod.total_valor | moneyBrl}}</strong>
+                                    </div>
+                                </div>
+                                
+                                <!-- Tabela de Lançamentos (expansível) -->
+                                <div *ngIf="prod.expanded" class="mt-2 pt-2 border-top">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover mb-0" style="font-size: 0.85rem;">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th style="width: 15%;">SIGLA</th>
+                                                    <th style="width: 20%;">PESO</th>
+                                                    <th style="width: 20%;">CUSTO</th>
+                                                    <th style="width: 25%;">VALOR</th>
+                                                    <th style="width: 20%;" class="text-center">AÇÕES</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr *ngFor="let lanc of prod.lancamentos; let j = index">
+                                                    <td><span class="badge bg-secondary">{{j + 1}}</span></td>
+                                                    <td class="fw-bold">{{lanc.peso | number:'1.2-2'}}</td>
+                                                    <td class="text-muted">{{lanc.preco_custo_unitario | moneyBrl}}</td>
+                                                    <td class="text-success fw-bold">{{lanc.valor_total | moneyBrl}}</td>
+                                                    <td class="text-center">
+                                                        <div class="btn-group btn-group-sm">
+                                                            <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                                    title="Corrigir" (click)="abrirModalCorrigir(i, j)">
+                                                                <i class="bi bi-pencil"></i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm btn-outline-warning" 
+                                                                    title="Trocar" (click)="abrirModalTrocarProduto(i, j)">
+                                                                <i class="bi bi-arrow-left-right"></i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                                    title="Excluir" (click)="removerLancamento(i, j)">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Totais -->
+                    <div class="alert alert-success mt-3">
+                        <div class="row">
+                            <div class="col-12 col-md-4">
+                                <strong>Total Produtos:</strong> R$ {{totalGeralValor | moneyBrl}}
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <strong>Taxas/Frete:</strong> R$
+                                {{(formNota.get('valor_frete')?.value || 0) | moneyBrl}}
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <h5 class="mb-0">
+                                    <strong>TOTAL:</strong> R$
+                                    {{(totalGeralValor + (formNota.get('valor_frete')?.value || 0)) | moneyBrl}}
+                                </h5>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rendimento da Carga -->
+                    <div class="alert alert-info mt-3" *ngIf="temDadosRendimento">
+                        <h6 class="fw-bold mb-3"><i class="bi bi-graph-up"></i> Rendimento da Carga</h6>
+                        <div class="row">
+                            <div class="col-12 col-md-3">
+                                <small class="text-muted">Qtd. Animais</small>
+                                <div class="fw-bold">{{formNota.get('qtd_animais')?.value}}</div>
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <small class="text-muted">Peso Animais</small>
+                                <div class="fw-bold">{{formNota.get('peso_animais')?.value}} kg</div>
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <small class="text-muted">Peso Lançamentos</small>
+                                <div class="fw-bold">{{pesoTotalProdutosRendimento.toFixed(2)}} kg</div>
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <small class="text-muted">Rendimento</small>
+                                <div class="fw-bold fs-5" [class.text-success]="percentualRendimento >= 50" 
+                                     [class.text-warning]="percentualRendimento < 50 && percentualRendimento >= 40"
+                                     [class.text-danger]="percentualRendimento < 40">
+                                    {{percentualRendimento.toFixed(2)}}%
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle"></i> 
+                                Apenas produtos marcados como "Calcula Rendimento" são considerados no cálculo.
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Checkbox de Fechamento -->
+                    <div class="alert alert-info mt-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="efetuarFechamento"
+                                [(ngModel)]="efetuarFechamento">
+                            <label class="form-check-label fw-bold" for="efetuarFechamento">
+                                <i class="bi bi-box-arrow-in-down"></i> Efetuar fechamento da nota
+                            </label>
+                            <div class="form-text">
+                                <small>
+                                    <i class="bi bi-info-circle"></i>
+                                    Ao marcar esta opção, os produtos lançados serão automaticamente adicionados ao
+                                    estoque.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botões -->
+                    <div class="d-flex gap-2 mt-3">
+                        <button type="button" class="btn btn-primary btn-lg flex-grow-1" (click)="finalizarNota()"
+                            [disabled]="loading || formNota.invalid || produtosLancados.length === 0">
+                            <text-spinner [loading]="loading">
+                                <i class="bi bi-check-circle"></i> Finalizar Lançamento
+                            </text-spinner>
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-lg" (click)="limparFormulario()"
+                            [disabled]="loading">
+                            <i class="bi bi-x-circle"></i> Limpar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Lista de Almoxarifados -->
+<div class="modal fade show d-block" *ngIf="mostrarListaAlmoxarifados" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Selecionar Almoxarifado</h5>
+                <button type="button" class="btn-close" (click)="mostrarListaAlmoxarifados = false"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="form-control form-control-lg mb-3" id="busca-almoxarifado"
+                    [(ngModel)]="buscaAlmoxarifado" (input)="buscarAlmoxarifado()" placeholder="Buscar por nome...">
+
+                <div class="list-group">
+                    <button type="button" class="list-group-item list-group-item-action"
+                        *ngFor="let almoxarifado of almoxarifadosFiltrados"
+                        (click)="selecionarAlmoxarifado(almoxarifado)">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">{{almoxarifado.nome}}</h6>
+                            </div>
+                            <i class="bi bi-chevron-right"></i>
+                        </div>
+                    </button>
+                    <div class="list-group-item" *ngIf="almoxarifadosFiltrados.length === 0">
+                        <p class="text-muted mb-0">Nenhum almoxarifado encontrado</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Lista de Fornecedores -->
+<div class="modal fade show d-block" *ngIf="mostrarListaFornecedores" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Selecionar Fornecedor</h5>
+                <button type="button" class="btn-close" (click)="mostrarListaFornecedores = false"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="form-control form-control-lg mb-3" id="busca-fornecedor"
+                    [(ngModel)]="buscaFornecedor" (input)="buscarFornecedor()"
+                    placeholder="Buscar por nome ou documento...">
+
+                <div class="list-group">
+                    <button type="button" class="list-group-item list-group-item-action"
+                        *ngFor="let fornecedor of fornecedoresFiltrados" (click)="selecionarFornecedor(fornecedor)">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">{{fornecedor.nome}}</h6>
+                                <small class="text-muted">{{fornecedor.documento}}</small>
+                            </div>
+                            <i class="bi bi-chevron-right"></i>
+                        </div>
+                    </button>
+                    <div class="list-group-item" *ngIf="fornecedoresFiltrados.length === 0">
+                        <p class="text-muted mb-0">Nenhum fornecedor encontrado</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Lista de Produtos -->
+<div class="modal fade show d-block" *ngIf="mostrarListaProdutos" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Selecionar Produto</h5>
+                <button type="button" class="btn-close" (click)="mostrarListaProdutos = false"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="form-control form-control-lg mb-3" id="busca-produto"
+                    [(ngModel)]="buscaProduto" (input)="buscarProduto()" placeholder="Buscar por nome ou SKU...">
+
+                <div class="row g-3">
+                    <div class="col-12 col-md-6 col-lg-4" *ngFor="let produto of produtosFiltrados">
+                        <div class="card h-100" style="cursor: pointer;" (click)="selecionarProduto(produto)">
+                            <div class="card-body">
+                                <h6 class="fw-bold">{{produto.nome}}</h6>
+                                <div class="d-flex justify-content-between text-muted small">
+                                    <span>SKU: {{produto.sku || 'N/A'}}</span>
+                                    <span class="badge bg-secondary">{{produto.unidade}}</span>
+                                </div>
+                                <div class="mt-2">
+                                    <strong class="text-success">R$ {{produto.preco_custo | moneyBrl}}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12" *ngIf="produtosFiltrados.length === 0">
+                        <div class="alert alert-info">Nenhum produto encontrado</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Corrigir Lançamento -->
+<div class="modal fade show d-block" *ngIf="modalCorrigirAberto" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Corrigir Lançamento</h5>
+                <button type="button" class="btn-close" (click)="fecharModalCorrigir()"></button>
+            </div>
+            <div class="modal-body">
+                <div *ngIf="lancamentoEdicao">
+                    <p class="text-muted mb-3">
+                        <strong>Produto:</strong> {{lancamentoEdicao.produto.nome}}
+                    </p>
+                    <label for="peso-correcao" class="form-label fw-bold">Peso/Quantidade</label>
+                    <input inputmode="numeric" class="form-control form-control-lg" id="peso-correcao"
+                        [(ngModel)]="pesoCorrecao" currencyMask (keyup.enter)="salvarCorrecao()">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" (click)="fecharModalCorrigir()">Cancelar</button>
+                <button type="button" class="btn btn-primary" (click)="salvarCorrecao()" [disabled]="pesoCorrecao <= 0">
+                    <i class="bi bi-check-circle"></i> Salvar Correção
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Trocar Produto -->
+<div class="modal fade show d-block" *ngIf="modalTrocarProdutoAberto" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Trocar Produto do Lançamento</h5>
+                <button type="button" class="btn-close" (click)="fecharModalTrocarProduto()"></button>
+            </div>
+            <div class="modal-body">
+                <div *ngIf="lancamentoEdicao" class="alert alert-info mb-3">
+                    <strong>Produto Atual:</strong> {{lancamentoEdicao.produto.nome}} <br>
+                    <strong>Peso:</strong> {{lancamentoEdicao.peso.toFixed(2)}} {{lancamentoEdicao.produto.unidade}}
+                </div>
+
+                <input type="text" class="form-control form-control-lg mb-3" id="busca-produto-troca"
+                    [(ngModel)]="buscaProdutoTroca" (input)="buscarProdutoTroca()"
+                    placeholder="Buscar novo produto por nome ou SKU...">
+
+                <div class="row g-3">
+                    <div class="col-12 col-md-6 col-lg-4" *ngFor="let produto of produtosFiltradosTroca">
+                        <div class="card h-100" [class.border-success]="produtoTroca?._id === produto._id"
+                            [class.border-3]="produtoTroca?._id === produto._id" style="cursor: pointer;"
+                            (click)="selecionarProdutoTroca(produto)">
+                            <div class="card-body">
+                                <h6 class="fw-bold">{{produto.nome}}</h6>
+                                <div class="d-flex justify-content-between text-muted small">
+                                    <span>SKU: {{produto.sku || 'N/A'}}</span>
+                                    <span class="badge bg-secondary">{{produto.unidade}}</span>
+                                </div>
+                                <div class="mt-2">
+                                    <strong class="text-success">R$ {{produto.preco_custo | moneyBrl}}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12" *ngIf="produtosFiltradosTroca.length === 0">
+                        <div class="alert alert-info">Nenhum produto encontrado</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" (click)="fecharModalTrocarProduto()">Cancelar</button>
+                <button type="button" class="btn btn-warning" (click)="salvarTrocaProduto()" [disabled]="!produtoTroca">
+                    <i class="bi bi-arrow-left-right"></i> Trocar Produto
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Grupo de Cobranças -->
+<ng-template #modalEditarGrupoCobranca let-modal>
+    <div class="modal-header text-white" style="background-color: #e67e22;">
+        <h5 class="modal-title"><i class="bi bi-pencil-square"></i> Editar Grupo de Cobranças</h5>
+        <button type="button" class="btn-close btn-close-white" (click)="fecharModalEditarGrupoCobranca()"></button>
+    </div>
+    <div class="modal-body">
+        <form [formGroup]="formCobranca">
+            <div class="mb-3">
+                <label class="form-label fw-bold">Forma de Pagamento *</label>
+                <select class="form-select form-select-lg" formControlName="forma_pagamento_id"
+                    (change)="onFormaPagamentoChange()">
+                    <option value="">Selecione...</option>
+                    <option *ngFor="let fp of formasPagamento" [value]="fp._id">
+                        {{fp.nome}} {{ fp.avista ? '(À vista)' : '(' + fp.dias_intervalo + ' dias)' }}
+                    </option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Número Base *</label>
+                <input type="text" class="form-control form-control-lg" formControlName="numero_cobranca"
+                    placeholder="Ex: BOL, DUPL, etc">
+                <div class="form-text">
+                    Este número será usado como base (Ex: BOL/1, BOL/2, etc)
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Valor Total *</label>
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text">R$</span>
+                    <input class="form-control" formControlName="valor" currencyMask>
+                </div>
+                <div class="form-text">
+                    Será dividido entre as parcelas
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12 col-md-4 mb-3">
+                    <label for="data_vencimento_edit" class="form-label fw-bold">1º Vencimento *</label>
+                    <input type="date" class="form-control form-control-lg" id="data_vencimento_edit"
+                        formControlName="data_vencimento">
+                </div>
+                <div class="col-12 col-md-4 mb-3">
+                    <label for="numero_parcelas_edit" class="form-label fw-bold">Parcelas *</label>
+                    <input type="number" inputmode="numeric" class="form-control form-control-lg"
+                        id="numero_parcelas_edit" formControlName="numero_parcelas" min="1" max="120" placeholder="1">
+                </div>
+                <div class="col-12 col-md-4 mb-3">
+                    <label for="intervalo_dias_edit" class="form-label fw-bold">Intervalo (dias) *</label>
+                    <input type="number" inputmode="numeric" class="form-control form-control-lg"
+                        id="intervalo_dias_edit" formControlName="intervalo_dias" min="1" max="365" placeholder="30">
+                </div>
+            </div>
+
+            <div class="alert alert-success"
+                *ngIf="formCobranca.valid && formCobranca.get('numero_parcelas')?.value > 0">
+                <i class="bi bi-info-circle"></i>
+                <strong>{{ formCobranca.get('numero_parcelas')?.value }}x de
+                    R$ {{ ((formCobranca.get('valor')?.value || 0) / (formCobranca.get('numero_parcelas')?.value || 1))
+                    | moneyBrl }}</strong>
+                a cada {{ formCobranca.get('intervalo_dias')?.value || 30 }} dias
+            </div>
+
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>
+                As cobranças serão recalculadas automaticamente ao salvar.
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-danger" (click)="removerGrupoCobrancaModal()">
+            <i class="bi bi-trash"></i> Remover Grupo
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="fecharModalEditarGrupoCobranca()">
+            Cancelar
+        </button>
+        <button type="button" class="btn btn-primary" (click)="salvarEdicaoGrupoCobranca()"
+            [disabled]="formCobranca.get('numero_parcelas')?.value <= 0">
+            <i class="bi bi-check-circle"></i> Salvar Alterações
+        </button>
+    </div>
+</ng-template>
+<!-- Modal de Adicionar/Editar Cobrança -->
+<ng-template #modalCobranca let-modal>
+    <div class="modal-header text-white" style="background-color: #e67e22;">
+        <h5 class="modal-title">
+            <i class="bi bi-cash-stack"></i> {{ cobrancaEmEdicao !== null ? 'Editar' : 'Adicionar' }} Cobrança
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="fecharModalCobranca()"></button>
+    </div>
+    <div class="modal-body">
+        <!-- Toggle Modo Parcelado -->
+        <div class="mb-3" *ngIf="cobrancaEmEdicao === null">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="modoParceladoModal" [checked]="modoParcelado"
+                    (change)="toggleModoParcelado()">
+                <label class="form-check-label fw-bold" for="modoParceladoModal">
+                    <i class="bi bi-calendar-range"></i> Gerar Múltiplas Cobranças
+                </label>
+            </div>
+        </div>
+
+        <form [formGroup]="formCobranca">
+            <div class="row g-3">
+                <!-- Forma de Pagamento - apenas quando adicionando -->
+                <div class="col-12 col-md-6" *ngIf="cobrancaEmEdicao === null">
+                    <label for="forma-pagamento-cobranca" class="form-label fw-bold">Forma de Pagamento *</label>
+                    <select class="form-select form-select-lg" id="forma-pagamento-cobranca"
+                        formControlName="forma_pagamento_id" (change)="onFormaPagamentoChange()">
+                        <option value="">Selecione...</option>
+                        <option *ngFor="let fp of formasPagamento" [value]="fp._id">
+                            {{fp.nome}} {{ fp.avista ? '(À vista)' : '(' + fp.dias_intervalo + ' dias)' }}
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Número - apenas quando adicionando -->
+                <div class="col-12 col-md-6" *ngIf="cobrancaEmEdicao === null">
+                    <label for="numero-cobranca-modal" class="form-label fw-bold">
+                        {{ modoParcelado ? 'Número Base *' : 'Número *' }}
+                    </label>
+                    <input type="text" class="form-control form-control-lg" id="numero-cobranca-modal"
+                        formControlName="numero_cobranca" [placeholder]="modoParcelado ? 'Ex: BOL' : 'Ex: 001'">
+                </div>
+
+                <!-- Info da cobrança sendo editada -->
+                <div class="col-12" *ngIf="cobrancaEmEdicao !== null">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Editando:</strong> {{cobrancas[cobrancaEmEdicao].numero_cobranca}}
+                        <span *ngIf="cobrancas[cobrancaEmEdicao].forma_pagamento">
+                            | <strong>Forma:</strong> {{cobrancas[cobrancaEmEdicao].forma_pagamento.nome}}
+                        </span>
+                        <br>
+                        <small class="text-muted">Para alterar a forma de pagamento, edite o grupo inteiro.</small>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label for="data-vencimento-modal" class="form-label fw-bold">
+                        {{ modoParcelado ? '1º Vencimento *' : 'Vencimento *' }}
+                    </label>
+                    <input type="date" class="form-control form-control-lg" id="data-vencimento-modal"
+                        formControlName="data_vencimento">
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label for="valor-cobranca-modal" class="form-label fw-bold">
+                        {{ modoParcelado ? 'Valor Total *' : 'Valor *' }}
+                    </label>
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text">R$</span>
+                        <input class="form-control" id="valor-cobranca-modal" formControlName="valor" currencyMask>
+                    </div>
+                </div>
+
+                <!-- Campos para parcelamento -->
+                <div class="col-12 col-md-6" *ngIf="modoParcelado">
+                    <label for="numero-parcelas-modal" class="form-label fw-bold">Número de Parcelas *</label>
+                    <input type="number" class="form-control form-control-lg" id="numero-parcelas-modal"
+                        formControlName="numero_parcelas" min="1" max="120" placeholder="1">
+                </div>
+
+                <div class="col-12 col-md-6" *ngIf="modoParcelado">
+                    <label for="intervalo-dias-modal" class="form-label fw-bold">Intervalo (dias) *</label>
+                    <input type="number" class="form-control form-control-lg" id="intervalo-dias-modal"
+                        formControlName="intervalo_dias" min="1" placeholder="30">
+                </div>
+            </div>
+
+            <!-- Checkbox para recalcular datas ao editar primeira parcela -->
+            <div *ngIf="cobrancaEmEdicao !== null && cobrancas[cobrancaEmEdicao] && cobrancas[cobrancaEmEdicao].numero_parcela === 1 && cobrancas[cobrancaEmEdicao].total_parcelas > 1"
+                class="alert alert-info mt-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="recalcularDatasModal"
+                        [(ngModel)]="recalcularDatasAposEdicao" [ngModelOptions]="{standalone: true}">
+                    <label class="form-check-label" for="recalcularDatasModal">
+                        <i class="bi bi-calendar-event"></i>
+                        <strong>Recalcular datas das próximas parcelas</strong>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Preview do Parcelamento -->
+            <div *ngIf="modoParcelado && formCobranca.valid" class="alert alert-success mt-3">
+                <i class="bi bi-info-circle"></i>
+                <strong>{{ formCobranca.get('numero_parcelas')?.value || 1 }}x de
+                    R$ {{ ((formCobranca.get('valor')?.value || 0) /
+                    (formCobranca.get('numero_parcelas')?.value || 1)) | moneyBrl }}</strong>
+                a cada {{ formCobranca.get('intervalo_dias')?.value || 30 }} dias
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-danger" *ngIf="cobrancaEmEdicao !== null"
+            (click)="removerCobranca(cobrancaEmEdicao)">
+            <i class="bi bi-trash"></i> Excluir Parcela
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="fecharModalCobranca()">
+            Cancelar
+        </button>
+        <button type="button" class="btn btn-success" [disabled]="formCobranca.invalid" (click)="adicionarCobranca()">
+            <i class="bi bi-check-circle"></i> {{ cobrancaEmEdicao !== null ? 'Salvar' : (modoParcelado ? 'Gerar
+            Cobranças' : 'Adicionar') }}
+        </button>
+    </div>
+</ng-template>
+
+<!-- Modal OCR de Nota -->
+<ng-template #modalOcr let-modal>
+    <div class="modal-header">
+        <h5 class="modal-title">
+            <i class="bi bi-camera"></i> Importar Dados da Nota
+        </h5>
+        <button type="button" class="btn-close" (click)="fecharModalOcr()"></button>
+    </div>
+    <div class="modal-body"
+        style="min-height: 400px; display: flex; align-items: center; justify-content: center; background-color: #f8f9fa;">
+        <div *ngIf="!imageChangedEvent" class="text-center py-5">
+            <label for="file-input" class="btn btn-lg btn-primary">
+                <i class="bi bi-upload me-2"></i> Selecionar Imagem da Nota
+            </label>
+            <input type="file" id="file-input" class="d-none" accept="image/*" (change)="onFileSelected($event)">
+            <p class="text-muted mt-3">Selecione uma foto ou imagem da nota fiscal</p>
+        </div>
+
+        <div *ngIf="imageChangedEvent"
+            style="width: 100%; height: 80vh; display: flex; align-items: center; justify-content: center;">
+            <image-cropper [imageChangedEvent]="imageChangedEvent" [maintainAspectRatio]="false" [aspectRatio]="3/4"
+                [resizeToWidth]="800" [containWithinAspectRatio]="true" format="jpeg"
+                (imageCropped)="imageCropped($event)" (imageLoaded)="imageLoaded()" (cropperReady)="cropperReady()"
+                (loadImageFailed)="loadImageFailed()" style="max-width: 100%; max-height: 100%;">
+            </image-cropper>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="fecharModalOcr()">
+            Cancelar
+        </button>
+        <button type="button" class="btn btn-primary btn-lg" *ngIf="imageChangedEvent"
+            [disabled]="!croppedImage || uploadingOcr" (click)="processarOcr()">
+            <span *ngIf="uploadingOcr" class="spinner-border spinner-border-sm me-2"></span>
+            <i class="bi bi-gear me-2" *ngIf="!uploadingOcr"></i>
+            {{ uploadingOcr ? 'Processando...' : 'Processar Imagem' }}
+        </button>
+    </div>
+</ng-template>
+
+<!-- Modal Lista Produtos OCR -->
+<div class="modal fade" [class.show]="modalListaProdutosOCRAberto"
+    [style.display]="modalListaProdutosOCRAberto ? 'block' : 'none'" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-list-ul me-2"></i>
+                    Produtos OCR Disponíveis
+                </h5>
+                <button type="button" class="btn-close btn-close-white" (click)="fecharListaProdutosOCR()"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Selecione qual produto OCR você deseja adicionar ao lançamento atual:</p>
+
+                <div class="list-group">
+                    <button type="button" class="list-group-item list-group-item-action"
+                        *ngFor="let prodOCR of produtosOCR" (click)="abrirModalSelecaoPecas(prodOCR)">
+                        <div class="d-flex w-100 justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{prodOCR.nome}}</h6>
+                                <small class="text-muted">Código: {{prodOCR.codigo}}</small>
+                            </div>
+                            <span class="badge bg-primary rounded-pill">
+                                {{prodOCR.quantidade_pecas}} peças
+                            </span>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted me-3">
+                                <i class="bi bi-box-seam"></i> Peso Total: <strong>{{prodOCR.peso_total_kg}} kg</strong>
+                            </small>
+                            <small class="text-muted">
+                                <i class="bi bi-calculator"></i> Peso Médio: <strong>{{prodOCR.peso_medio_kg}}
+                                    kg</strong>
+                            </small>
+                        </div>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" (click)="fecharListaProdutosOCR()">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Backdrop do modal lista produtos -->
+<div class="modal-backdrop fade" [class.show]="modalListaProdutosOCRAberto" *ngIf="modalListaProdutosOCRAberto"
+    (click)="fecharListaProdutosOCR()">
+</div>
+
+<!-- Modal Seleção de Peças OCR -->
+<div class="modal fade show d-block" *ngIf="modalSelecaoPecasAberto" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-list-check"></i> Selecionar Peças - {{produtoOCRSelecionado?.nome}}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" (click)="fecharModalSelecaoPecas()"></button>
+            </div>
+            <div class="modal-body">
+                <div *ngIf="produtoOCRSelecionado" class="alert alert-info">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>Código:</strong> {{produtoOCRSelecionado.codigo}}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Total de Peças:</strong> {{produtoOCRSelecionado.quantidade_pecas}}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Peso Total:</strong> {{produtoOCRSelecionado.peso_total_kg}} kg
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Peso Médio:</strong> {{produtoOCRSelecionado.peso_medio_kg}} kg
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0">
+                        <strong>{{getPecasSelecionadasCount()}}</strong> de
+                        <strong>{{produtoOCRSelecionado?.pesos_individuais?.length || 0}}</strong> selecionadas
+                    </h6>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-primary" (click)="toggleTodasPecas(true)">
+                            <i class="bi bi-check-all"></i> Selecionar Todas
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary"
+                            (click)="toggleTodasPecas(false)">
+                            <i class="bi bi-x"></i> Limpar Seleção
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row g-2">
+                    <div class="col-6 col-md-3 col-lg-2"
+                        *ngFor="let peso of produtoOCRSelecionado?.pesos_individuais; let i = index">
+                        <div class="card h-100" [class.border-success]="pecasSelecionadas[i]"
+                            [class.border-3]="pecasSelecionadas[i]" [class.bg-success]="pecasSelecionadas[i]"
+                            [class.text-white]="pecasSelecionadas[i]" style="cursor: pointer;" (click)="togglePeca(i)">
+                            <div class="card-body p-2 text-center">
+                                <small class="d-block text-muted" *ngIf="!pecasSelecionadas[i]">#{{i + 1}}</small>
+                                <small class="d-block" *ngIf="pecasSelecionadas[i]">#{{i + 1}}</small>
+                                <strong class="d-block">{{peso}} kg</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" (click)="fecharModalSelecaoPecas()">
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-success btn-lg" [disabled]="getPecasSelecionadasCount() === 0"
+                    (click)="adicionarPecasSelecionadas()">
+                    <i class="bi bi-check-circle"></i>
+                    Adicionar {{getPecasSelecionadasCount()}} Peça(s)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

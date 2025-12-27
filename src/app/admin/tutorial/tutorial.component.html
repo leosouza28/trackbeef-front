@@ -1,0 +1,140 @@
+<div class="tutorial-container">
+  <div class="tutorial-header">
+    <h2>
+      <i class="bi bi-mortarboard-fill me-2"></i>
+      Tutorial do Sistema
+    </h2>
+    <p class="lead">Aprenda a usar todas as funcionalidades do TrackBeef</p>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="progress-section mb-4">
+    <div class="progress" style="height: 8px;">
+      <div 
+        class="progress-bar bg-success" 
+        role="progressbar" 
+        [style.width.%]="progressPercentage"
+        [attr.aria-valuenow]="currentStep + 1" 
+        aria-valuemin="0" 
+        [attr.aria-valuemax]="steps.length">
+      </div>
+    </div>
+    <div class="text-center mt-2">
+      <small class="text-muted">
+        Passo {{ currentStep + 1 }} de {{ steps.length }}
+      </small>
+    </div>
+  </div>
+
+  <!-- Step Content -->
+  <div class="step-content">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <!-- Step Header -->
+        <div class="step-header text-center mb-4">
+          <div class="step-icon mb-3">
+            <i [class]="'bi ' + currentStepData.icone"></i>
+          </div>
+          <h3 class="step-title">{{ currentStepData.titulo }}</h3>
+          <p class="step-description text-muted">{{ currentStepData.descricao }}</p>
+        </div>
+
+        <hr>
+
+        <!-- Step Details -->
+        <div class="step-details">
+          <h5 class="mb-3">
+            <i class="bi bi-info-circle me-2"></i>
+            Detalhes
+          </h5>
+          <ul class="details-list">
+            <li *ngFor="let detalhe of currentStepData.detalhes" class="mb-2">
+              {{ detalhe }}
+            </li>
+          </ul>
+        </div>
+
+        <!-- Example (if exists) -->
+        <div class="step-example mt-4" *ngIf="currentStepData.exemplo">
+          <div class="alert alert-info">
+            <i class="bi bi-lightbulb me-2"></i>
+            <strong>Exemplo prático:</strong> {{ currentStepData.exemplo }}
+          </div>
+        </div>
+
+        <!-- Tips (if exists) -->
+        <div class="step-tips mt-4" *ngIf="currentStepData.dicas && currentStepData.dicas.length > 0">
+          <h5 class="mb-3">
+            <i class="bi bi-star me-2"></i>
+            Dicas Importantes
+          </h5>
+          <ul class="tips-list">
+            <li *ngFor="let dica of currentStepData.dicas" class="mb-2">
+              <i class="bi bi-check-circle-fill text-success me-2"></i>
+              {{ dica }}
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Buttons -->
+  <div class="navigation-buttons mt-4">
+    <div class="row">
+      <div class="col-6">
+        <button 
+          class="btn btn-outline-secondary w-100" 
+          (click)="prevStep()"
+          [disabled]="currentStep === 0">
+          <i class="bi bi-arrow-left me-2"></i>
+          Anterior
+        </button>
+      </div>
+      <div class="col-6">
+        <button 
+          class="btn btn-success w-100" 
+          (click)="nextStep()"
+          [disabled]="currentStep === steps.length - 1">
+          Próximo
+          <i class="bi bi-arrow-right ms-2"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step Indicators -->
+  <div class="step-indicators mt-4">
+    <div class="d-flex justify-content-center flex-wrap gap-2">
+      <button 
+        *ngFor="let step of steps; let i = index"
+        class="btn btn-sm step-indicator"
+        [class.active]="i === currentStep"
+        [class.completed]="i < currentStep"
+        (click)="goToStep(i)"
+        [title]="step.titulo">
+        {{ i + 1 }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="action-buttons mt-4 text-center">
+    <button class="btn btn-primary" routerLink="/area-administrativa/inicio">
+      <i class="bi bi-house-door me-2"></i>
+      Voltar ao Início
+    </button>
+  </div>
+
+  <!-- Footer Info -->
+  <div class="tutorial-footer mt-5 text-center">
+    <hr>
+    <p class="text-muted mb-1">
+      <i class="bi bi-question-circle me-2"></i>
+      Precisa de ajuda adicional?
+    </p>
+    <p class="text-muted small">
+      Entre em contato com o suporte técnico ou consulte a documentação completa.
+    </p>
+  </div>
+</div>

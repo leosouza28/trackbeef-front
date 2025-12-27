@@ -25,7 +25,7 @@ export class AdminContainerComponent implements OnInit {
 
   ngOnInit(): void {
     this.sessao.userSubject.subscribe(user => {
-      if (user && user?.scopes?.length) {
+      if (user) {
         this.logged_user = user;
         this.loadMenu(false)
       } else {
@@ -50,10 +50,9 @@ export class AdminContainerComponent implements OnInit {
       return;
     } else {
       let sessao = this.sessao.getUser();
-      let scopes: any = sessao?.scopes || [];
+      let scopes: any = this.scopesEmpresaAtiva;
       this.menu = this.menuItems.filter((item: any) => {
         if (item.default) return true;
-
         if (item.submenu) {
           item.submenu = item.submenu.filter((subItem: any) => {
             return !subItem.scopes || subItem.scopes.some((scope: string) => scopes.includes(scope));
@@ -110,6 +109,21 @@ export class AdminContainerComponent implements OnInit {
   }
 
 
+  get scopesEmpresaAtiva(): string[] {
+    let empresa = this.sessao.getEmpresaAtiva();
+    let user = this.sessao.getUser();
+    if (empresa && user) {
+      let _user_empresa = user.empresas.find((ue: any) => ue.empresa_id === empresa.id);
+      console.log(_user_empresa)
+      if (_user_empresa && _user_empresa.perfil && _user_empresa.perfil.scopes) {
+        return _user_empresa.perfil.scopes;
+      }
+      return [];
+    }
+    return [];
+  }
+
+
   get menuItems() {
     return [
       {
@@ -120,56 +134,149 @@ export class AdminContainerComponent implements OnInit {
         default: true
       },
       {
-        icon: 'bi bi-people-fill me-2',
-        nome: 'Usuários',
+        icon: 'bi bi-mortarboard-fill me-2',
+        nome: 'Tutorial',
+        link: "/admin/tutorial",
+        submenu: null,
+        default: true
+      },
+
+      {
+        icon: 'bi bi-hammer me-2',
+        nome: 'Operacional',
         submenu: [
           {
             scopes: ["usuarios.leitura"],
-            icon: 'bi bi-search me-2',
-            nome: 'Consultar',
+            icon: 'bi bi-people me-2',
+            nome: 'Usuários',
             link: '/admin/usuarios/listar'
           },
           {
-            scopes: ["usuarios.editar"],
+            scopes: ["clientes.leitura"],
+            icon: 'bi bi-people me-2',
+            nome: 'Pessoas',
+            link: '/admin/pessoas/listar'
+          },
+          {
+            scopes: ["perfis.leitura"],
+            icon: 'bi bi-person-lines-fill me-2',
+            nome: 'Perfis de acesso',
+            link: '/admin/perfis/listar'
+          },
+          {
+            scopes: ["produtos.leitura"],
+            icon: 'bi bi-boxes me-2',
+            nome: 'Produtos',
+            link: '/admin/produtos/listar'
+          },
+          {
+            scopes: ["almoxarifados.leitura"],
+            icon: 'bi bi-buildings me-2',
+            nome: 'Almoxarifados',
+            link: '/admin/almoxarifados/listar'
+          },
+          {
+            scopes: ["estoque.notas_entradas_leitura"],
+            icon: 'bi bi-clipboard-plus me-2',
+            nome: 'Entrada de Estoque',
+            link: '/admin/notas-entradas/listar'
+          },
+          {
+            scopes: ["estoque.leitura"],
+            icon: 'bi bi-building me-2',
+            nome: 'Estoque',
+            link: '/admin/estoque/listar'
+          }
+        ],
+        open: false
+      },
+
+      {
+        icon: 'bi bi-cash-coin me-2',
+        nome: 'Vendas',
+        submenu: [
+          {
+            scopes: ["vendas.leitura"],
+            icon: 'bi bi-search me-2',
+            nome: 'Consultar',
+            link: '/admin/vendas/listar'
+          },
+          {
+            scopes: ["vendas.pdv"],
             icon: 'bi bi-plus-lg me-2',
-            nome: 'Adicionar',
-            link: '/admin/usuarios/form'
+            nome: 'Nova Venda',
+            link: '/admin/vendas/pdv'
           },
         ],
         open: false
       },
       {
-        icon: 'bi bi-hammer me-2',
-        nome: 'Operações',
+        icon: 'bi bi-cash-stack me-2',
+        nome: 'Financeiro',
         submenu: [
+          
           {
-            scopes: ['pix.leitura'],
-            icon: 'bi bi-search me-2',
-            nome: 'Consultar PIX (Sistema)',
-            link: '/admin/pix/listar'
+            scopes: ["financeiro.caixa_leitura"],
+            icon: 'bi bi-bank me-2',
+            nome: 'Caixa',
+            link: '/admin/financeiro/caixa/listar'
+          },
+          {
+            scopes: ["financeiro.contas_receber_leitura"],
+            icon: 'bi bi-graph-up-arrow me-2',
+            nome: 'Contas a Receber',
+            link: '/admin/financeiro/contas-a-receber/listar'
+          },
+          {
+            scopes: ["financeiro.contas_pagar_leitura"],
+            icon: 'bi bi-graph-down-arrow me-2',
+            nome: 'Contas a Pagar',
+            link: '/admin/financeiro/contas-a-pagar/listar'
+          },
+          {
+            scopes: ["financeiro.caixa_leitura"],
+            icon: 'bi bi-receipt me-2',
+            nome: 'Recebimentos',
+            link: '/admin/financeiro/recebimentos'
           },
         ],
-        open: false,
+        open: false
       },
+
       {
-        icon: 'bi bi-eye-fill me-2',
-        nome: 'Monitorar',
+        icon: 'bi bi-gear me-2',
+        nome: 'Configurações',
         submenu: [
           {
-            scopes: ['monitoramento.pix_leitura'],
-            icon: 'bi bi-search me-2',
-            nome: 'PIX',
-            link: '/admin/monitorar/pix'
+            scopes: ["configuracoes.empresa_editar"],
+            icon: 'bi bi-building me-2',
+            nome: 'Empresa',
+            link: '/admin/configuracoes/empresa'
+          },
+          {
+            scopes: ["configuracoes.formas_pagamento_leitura"],
+            icon: 'bi bi-cash-stack me-2',
+            nome: 'Formas Pagamento',
+            link: '/admin/configuracoes/formas-pagamento/listar'
+          },
+          {
+            scopes: ["configuracoes.juros_multas_leitura"],
+            icon: 'bi bi-percent me-2',
+            nome: 'Juros e Multas',
+            link: '/admin/configuracoes/juros-multas/listar'
           },
         ],
-        open: false,
+        open: false
       },
+
       {
         icon: 'bi bi-files-alt me-2',
         nome: 'Relatórios',
         submenu: [],
         open: false,
       },
+
+
 
       {
         icon: 'bi bi-door-open-fill text-danger me-2',

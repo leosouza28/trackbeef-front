@@ -25,10 +25,10 @@ export class PushNotificationService {
     }
 
     private firebaseApp = initializeApp(this.firebase);
-    private messaging: Messaging;
+    // private messaging: Messaging;
 
     constructor(private http: HttpClient, private endpointService: EndpointsService, private alertService: AlertService) {
-        this.messaging = getMessaging(this.firebaseApp);
+        // this.messaging = getMessaging(this.firebaseApp);
     }
 
     async requestPermissionAndGetToken(): Promise<string | null> {
@@ -36,33 +36,33 @@ export class PushNotificationService {
             console.warn('Navegador não suporta Notification API');
             return null;
         }
+        return null;
+        // const permission = await Notification.requestPermission();
 
-        const permission = await Notification.requestPermission();
+        // if (permission !== 'granted') {
+        //     console.log('Permissão de notificação negada:', permission);
+        //     return null;
+        // }
 
-        if (permission !== 'granted') {
-            console.log('Permissão de notificação negada:', permission);
-            return null;
-        }
+        // const token = await getToken(this.messaging, { vapidKey: this.vapidKey });
 
-        const token = await getToken(this.messaging, { vapidKey: this.vapidKey });
-
-        if (token) {
-            console.log('FCM token:', token);
-            this.saveTokenToLocalStorage(token);
-            await this.endpointService.registerFcmToken(token)
-            return token;
-        } else {
-            console.warn('Não foi possível obter o token FCM.');
-            return null;
-        }
+        // if (token) {
+        //     console.log('FCM token:', token);
+        //     // this.saveTokenToLocalStorage(token);
+        //     // await this.endpointService.registerFcmToken(token)
+        //     return token;
+        // } else {
+        //     console.warn('Não foi possível obter o token FCM.');
+        //     return null;
+        // }
     }
 
     listenForegroundMessages() {
-        onMessage(this.messaging, (payload) => {
-            console.log('Mensagem recebida em foreground: ', payload);
-            this.alertService.showSuccess(payload.notification?.title || 'Você recebeu uma nova notificação.');
-            // Aqui você pode exibir um toast, snackbar, etc.
-        });
+        // onMessage(this.messaging, (payload) => {
+        //     console.log('Mensagem recebida em foreground: ', payload);
+        //     this.alertService.showSuccess(payload.notification?.title || 'Você recebeu uma nova notificação.');
+        //     // Aqui você pode exibir um toast, snackbar, etc.
+        // });
     }
 
     /**

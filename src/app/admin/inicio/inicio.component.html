@@ -27,7 +27,6 @@
     </div>
     <inline-loading [loading]="loading"></inline-loading>
 
-
     <ng-container *ngIf="empty && !loading">
         <div class="alert alert-info" role="alert">
             <i class="bi bi-info-circle-fill me-2"></i>
@@ -36,228 +35,10 @@
     </ng-container>
 
     <!-- Dashboard Content -->
-    <ng-container *ngIf="dashboard && !loading">
-        <!-- Cards de Métricas -->
-        <div class="row g-3 mb-4">
-            <!-- Total de Transações -->
-            <div class="col-12 col-md-6 col-xl-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <p class="text-muted mb-1">
-                                    <i class="bi bi-hash me-1"></i>
-                                    Total de Transações
-                                </p>
-                                <h3 class="fw-bold mb-0">{{dashboard.total_pixs_periodo}}</h3>
-                            </div>
-                            <div class="bg-primary bg-opacity-10 p-3 rounded">
-                                <i class="bi bi-receipt text-primary fs-4"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Valor Total -->
-            <div class="col-12 col-md-6 col-xl-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <p class="text-muted mb-1">
-                                    <i class="bi bi-cash-stack me-1"></i>
-                                    Valor Total
-                                </p>
-                                <h3 class="fw-bold mb-0 text-success">
-                                    {{formatarValor(dashboard.total_valor_pixs_periodo)}}</h3>
-                            </div>
-                            <div class="bg-success bg-opacity-10 p-3 rounded">
-                                <i class="bi bi-currency-dollar text-success fs-4"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Ticket Médio -->
-            <div class="col-12 col-md-6 col-xl-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <p class="text-muted mb-1">
-                                    <i class="bi bi-calculator me-1"></i>
-                                    Ticket Médio
-                                </p>
-                                <h3 class="fw-bold mb-0 text-info">{{formatarValor(dashboard.ticket_medio_periodo)}}
-                                </h3>
-                            </div>
-                            <div class="bg-info bg-opacity-10 p-3 rounded">
-                                <i class="bi bi-graph-up-arrow text-info fs-4"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Range de Valores -->
-            <div class="col-12 col-md-6 col-xl-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="w-100">
-                                <p class="text-muted mb-1">
-                                    <i class="bi bi-arrows-collapse me-1"></i>
-                                    Range de Valores
-                                </p>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <small class="text-muted d-block">Mínimo</small>
-                                        <strong
-                                            class="text-danger">{{formatarValor(dashboard.menor_transacao_periodo)}}</strong>
-                                    </div>
-                                    <i class="bi bi-arrow-left-right text-muted"></i>
-                                    <div class="text-end">
-                                        <small class="text-muted d-block">Máximo</small>
-                                        <strong
-                                            class="text-success">{{formatarValor(dashboard.maior_transacao_periodo)}}</strong>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Gráfico e Ranking -->
-        <div class="row g-3 mb-4">
-            <!-- Gráfico de Pagamentos Diários -->
-            <div class="col-12 col-lg-8">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold mb-3">
-                            <i class="bi bi-graph-up me-2"></i>
-                            Evolução de Pagamentos
-                        </h5>
-                        <div style="height: 350px;">
-                            <canvas baseChart [data]="lineChartData" [options]="lineChartOptions"
-                                [type]="lineChartType">
-                            </canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Top 10 Clientes -->
-            <div class="col-12 col-lg-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold mb-3">
-                            <i class="bi bi-trophy-fill text-warning me-2"></i>
-                            Top 10 Clientes
-                        </h5>
-                        <div class="ranking-list" style="max-height: 350px; overflow-y: auto;">
-                            <div class="ranking-item p-2 border-bottom"
-                                *ngFor="let cliente of dashboard.ranking_pagadores; let i = index">
-                                <div class="d-flex align-items-start">
-                                    <div class="ranking-position me-2">
-                                        <span class="badge" [class.bg-warning]="i === 0" [class.bg-secondary]="i === 1"
-                                            [class.bg-danger]="i === 2" [class.bg-primary]="i > 2">
-                                            {{i + 1}}º
-                                        </span>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <p class="mb-0 fw-semibold text-truncate" [title]="cliente.nomePagador">
-                                            {{cliente.nomePagador}}
-                                        </p>
-                                        <small class="text-muted">
-                                            <i class="bi bi-card-text me-1"></i>
-                                            {{getTipoDocumento(cliente.documento)}}:
-                                            {{formatarDocumento(cliente.documento)}}
-                                        </small>
-                                        <div class="mt-1">
-                                            <span class="badge bg-success me-1">
-                                                {{formatarValor(cliente.total_valor)}}
-                                            </span>
-                                            <span class="badge bg-info">
-                                                {{cliente.total_pixs}} PIX
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tabela de Pagamentos Diários -->
-        <div class="row g-3 mb-4">
-            <div class="col-12">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold mb-3">
-                            <i class="bi bi-calendar3 me-2"></i>
-                            Detalhamento Diário
-                        </h5>
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th><i class="bi bi-calendar-event me-1"></i>Data</th>
-                                        <th class="text-end"><i class="bi bi-cash me-1"></i>Valor Total</th>
-                                        <th class="text-end"><i class="bi bi-hash me-1"></i>Quantidade</th>
-                                        <th class="text-end"><i class="bi bi-calculator me-1"></i>Ticket Médio</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr *ngFor="let dia of dashboard.pagamentos_diario">
-                                        <td>
-                                            <strong>{{dia.data | date:'dd/MM/yyyy'}}</strong>
-                                            <br>
-                                            <small class="text-muted">{{dia.data | date:'EEEE'}}</small>
-                                        </td>
-                                        <td class="text-end">
-                                            <strong class="text-success">{{formatarValor(dia.total_valor)}}</strong>
-                                        </td>
-                                        <td class="text-end">
-                                            <span class="badge bg-primary">{{dia.total_pixs}}</span>
-                                        </td>
-                                        <td class="text-end">
-                                            <span class="text-info">{{formatarValor(dia.total_valor /
-                                                dia.total_pixs)}}</span>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                                <tfoot class="table-light">
-                                    <tr>
-                                        <td><strong>TOTAL</strong></td>
-                                        <td class="text-end">
-                                            <strong
-                                                class="text-success">{{formatarValor(dashboard.total_valor_pixs_periodo)}}</strong>
-                                        </td>
-                                        <td class="text-end">
-                                            <strong class="badge bg-primary">{{dashboard.total_pixs_periodo}}</strong>
-                                        </td>
-                                        <td class="text-end">
-                                            <strong
-                                                class="text-info">{{formatarValor(dashboard.ticket_medio_periodo)}}</strong>
-                                        </td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </ng-container>
 
     <!-- Atalhos -->
-    <ng-container *ngIf="sessao.isScopeAvailable('monitoramento.pix_leitura')">
+    <ng-container >
+        <hr>
         <div class="row mb-3">
             <div class="col-12 mb-2">
                 <h5 class="fw-bold">
@@ -265,7 +46,7 @@
                     Atalhos Rápidos
                 </h5>
             </div>
-            <div class="col-12 col-lg-4">
+            <!-- <div class="col-12 col-lg-4">
                 <div class="card border-0 shadow-sm h-100 atalho-card">
                     <div class="card-body d-flex flex-column">
                         <div class="mb-3">
@@ -283,8 +64,16 @@
                         </a>
                     </div>
                 </div>
-            </div>
+            </div> -->
         </div>
     </ng-container>
 
 </div>
+
+<!-- Botão de Ajuda Flutuante -->
+<button 
+    class="btn btn-info floating-help-btn shadow-lg" 
+    routerLink="/admin/tutorial"
+    title="Acessar Tutorial do Sistema">
+    <i class="bi bi-question-circle"></i>
+</button>

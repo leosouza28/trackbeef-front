@@ -55,9 +55,9 @@ export class InicioComponent implements OnInit {
   async getDashboardAdmin() {
     this.loading = true;
     try {
-      let data: any = await this.endpointService.getDashboardAdmin({ ...this.form.getRawValue() });
-      this.dashboard = data.dashboard_admin;
-      this.prepareChart();
+      // let data: any = await this.endpointService.getDashboardAdmin({ ...this.form.getRawValue() });
+      // this.dashboard = data.dashboard_admin;
+      // this.prepareChart();
     } catch (error) {
       console.log(error);
     }

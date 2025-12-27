@@ -15,13 +15,6 @@ export class ListarUsuariosComponent {
   form: FormGroup;
   loading: boolean = false;
 
-  niveis_acesso = [
-    'ADMIN', 'CLIENTE', 'VENDEDOR'
-  ]
-  status = [
-    'ATIVO', 'BLOQUEADO'
-  ]
-
   constructor(
     private endpointsService: EndpointsService,
     private fb: FormBuilder,

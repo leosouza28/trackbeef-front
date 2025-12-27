@@ -1,0 +1,281 @@
+.tutorial-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.tutorial-header {
+  text-align: center;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+
+  h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  .lead {
+    font-size: 1.1rem;
+    margin-bottom: 0;
+    opacity: 0.95;
+  }
+}
+
+.progress-section {
+  .progress {
+    border-radius: 10px;
+    background-color: #e9ecef;
+    overflow: hidden;
+
+    .progress-bar {
+      transition: width 0.6s ease;
+    }
+  }
+}
+
+.step-content {
+  .card {
+    border: none;
+    border-radius: 15px;
+    transition: transform 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+  }
+
+  .step-header {
+    .step-icon {
+      i {
+        font-size: 4rem;
+        color: #667eea;
+        animation: bounce 2s infinite;
+      }
+    }
+
+    .step-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+
+    .step-description {
+      font-size: 1.1rem;
+    }
+  }
+
+  .step-details {
+    h5 {
+      color: #2c3e50;
+      font-weight: 600;
+    }
+
+    .details-list {
+      list-style: none;
+      padding-left: 0;
+
+      li {
+        padding: 10px;
+        padding-left: 40px;
+        position: relative;
+        line-height: 1.6;
+        background: #f8f9fa;
+        margin-bottom: 8px;
+        border-radius: 8px;
+        transition: background 0.3s ease;
+
+        &:hover {
+          background: #e9ecef;
+        }
+
+        &::before {
+          content: "→";
+          position: absolute;
+          left: 15px;
+          font-weight: bold;
+          color: #667eea;
+          font-size: 1.2rem;
+        }
+      }
+    }
+  }
+
+  .step-example {
+    .alert {
+      border-left: 4px solid #0dcaf0;
+      background: #e7f7ff;
+      border-radius: 8px;
+    }
+  }
+
+  .step-tips {
+    h5 {
+      color: #2c3e50;
+      font-weight: 600;
+    }
+
+    .tips-list {
+      list-style: none;
+      padding-left: 0;
+
+      li {
+        padding: 8px 0;
+        font-size: 0.95rem;
+        line-height: 1.6;
+
+        i {
+          font-size: 1.1rem;
+        }
+      }
+    }
+  }
+}
+
+.navigation-buttons {
+  .btn {
+    padding: 12px 20px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    i {
+      font-size: 1rem;
+    }
+  }
+
+  .btn-success {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+  }
+}
+
+.step-indicators {
+  .step-indicator {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid #dee2e6;
+    background: white;
+    color: #6c757d;
+    font-weight: 600;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: scale(1.1);
+      border-color: #667eea;
+    }
+
+    &.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-color: #667eea;
+      color: white;
+      transform: scale(1.15);
+      box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+    }
+
+    &.completed {
+      background: #28a745;
+      border-color: #28a745;
+      color: white;
+
+      &::after {
+        content: "✓";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 0.9rem;
+      }
+    }
+  }
+}
+
+.action-buttons {
+  .btn {
+    padding: 12px 30px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+  }
+}
+
+.tutorial-footer {
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 10px;
+
+  p {
+    margin-bottom: 5px;
+  }
+}
+
+// Animations
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .tutorial-container {
+    padding: 15px;
+  }
+
+  .tutorial-header {
+    h2 {
+      font-size: 1.5rem;
+    }
+
+    .lead {
+      font-size: 1rem;
+    }
+  }
+
+  .step-content {
+    .step-header {
+      .step-icon i {
+        font-size: 3rem;
+      }
+
+      .step-title {
+        font-size: 1.4rem;
+      }
+    }
+  }
+
+  .step-indicators {
+    .step-indicator {
+      width: 35px;
+      height: 35px;
+      font-size: 0.9rem;
+    }
+  }
+}

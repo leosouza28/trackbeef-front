@@ -26,16 +26,10 @@ export class FormUsuariosComponent implements OnInit {
     this.form = this.fb.group({
       _id: this.fb.control(""),
       documento: this.fb.control(""),
-      nivel_cliente: this.fb.control(false),
-      nivel_admin: this.fb.control(false),
-      nivel_vendedor: this.fb.control(false),
       username: this.fb.control(""),
       nome: this.fb.control(""),
-      scopes: this.fb.array([]),
       email: this.fb.control(""),
       senha: this.fb.control(""),
-      data_nascimento: this.fb.control(null),
-      sexo: this.fb.control(""),
       status: this.fb.control("ATIVO"),
       telefones: this.fb.array([
         this.fb.group({
@@ -44,15 +38,6 @@ export class FormUsuariosComponent implements OnInit {
           principal: this.fb.control(false)
         })
       ]),
-      endereco: this.fb.group({
-        cep: this.fb.control(""),
-        logradouro: this.fb.control(""),
-        numero: this.fb.control(""),
-        complemento: this.fb.control(""),
-        bairro: this.fb.control(""),
-        cidade: this.fb.control(""),
-        estado: this.fb.control("")
-      })
     });
   }
 
@@ -192,6 +177,9 @@ export class FormUsuariosComponent implements OnInit {
       }
     })
     this.limparArrayTelefones();
+    setTimeout(() => {
+      this.addTelefone();
+    }, 250);
   }
 
   limparArrayTelefones() {

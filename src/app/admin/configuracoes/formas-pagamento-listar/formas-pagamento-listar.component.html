@@ -1,0 +1,49 @@
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="fw-bold ">Formas de Pagamento</h1>
+        </div>
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="d-flex flex-row gap-2 p-3">
+                    <button type="button" class="btn btn-success" [routerLink]="['/admin/configuracoes/formas-pagamento/form']">
+                        <i class="bi bi-plus-lg me-2"></i> Adicionar
+                    </button>
+                </div>
+                <div class="px-3 table-responsive">
+                    <table-template [total]="data.total" [loading]="loading" [paginacaoAtiva]="true">
+                        <table class="table table-borderless table-hover border-bottom">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>A Vista</th>
+                                    <th>Intervalo</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let item of data.lista" class="cursor-pointer"
+                                    [routerLink]="['/admin/configuracoes/formas-pagamento/form']" [queryParams]="{ id: item._id }">
+                                    <td>{{item.nome}}</td>
+                                    <td>{{item.avista ? 'A Vista' : 'A Prazo'}}</td>
+                                    <td>
+                                        <span *ngIf="item.avista">
+                                            <i class="bi bi-cash-stack me-1"></i> À vista
+                                        </span>
+                                        <span *ngIf="!item.avista">
+                                            <i class="bi bi-clock-history me-1"></i> {{item.dias_intervalo}} dias de intervalo
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <render-badge [badgeText]="item.status"></render-badge>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </table-template>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

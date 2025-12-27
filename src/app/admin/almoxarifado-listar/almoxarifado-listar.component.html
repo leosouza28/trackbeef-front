@@ -1,0 +1,54 @@
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="fw-bold ">Almoxarifados</h1>
+        </div>
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <form [formGroup]="form" (submit)="query()" class="p-3">
+                    <div class="d-flex flex-row gap-2">
+                        <button type="button" class="btn btn-primary" [routerLink]="['/admin/almoxarifados/form']">
+                            <i class="bi bi-plus-lg me-2"></i> Adicionar
+                        </button>
+                    </div>
+                </form>
+                <div class="px-3 table-responsive">
+                    <table-template [total]="data.total" [loading]="loading" [paginacaoAtiva]="true">
+
+                        <div class="row row-gap-3">
+                            <div class="col-12 col-lg-6" *ngFor="let item of data.lista">
+                                <div class="card bg-white d-flex flex-column gap-3 p-3">
+                                    <h5 class="fw-bold mb-0">{{ item.nome }}</h5>
+                                    <div class="d-flex flex-row" *ngIf="item.principal">
+                                        <span class="badge bg-success me-2">
+                                            Almoxarifado Principal
+                                        </span>
+                                    </div>
+                                    <div class="d-flex flex-column gap-2">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted">Quantidade:</span>
+                                            <span class="fw-semibold">{{ item.total_produtos_estoque }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted">Valor em Estoque:</span>
+                                            <span class="fw-semibold">{{ item.valor_estoque | moneyBrl }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-row">
+                                        <a [routerLink]="['/admin/almoxarifados', item._id, 'visualizar']" class="btn btn-sm btn-outline-primary me-2">
+                                            <i class="bi bi-eye-fill me-1"></i> Visualizar
+                                        </a>
+                                        <a [routerLink]="['/admin/almoxarifados/form']" [queryParams]="{id: item._id}" class="btn btn-sm btn-outline-primary me-2">
+                                            <i class="bi bi-pencil-fill me-1"></i> Editar
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </table-template>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

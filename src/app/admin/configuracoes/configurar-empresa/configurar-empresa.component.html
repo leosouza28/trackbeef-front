@@ -1,0 +1,259 @@
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="fw-bold mb-0">Configurações da Empresa</h1>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <p class="text-muted px-3 pt-3">Os campos com * são obrigatórios</p>
+                <form [formGroup]="form" (ngSubmit)="onSubmit()" class="px-3 pb-3">
+                    <div class="row g-3">
+                        <!-- Informações Básicas -->
+                        <div class="col-12">
+                            <h6 class="text-uppercase text-body text-xs font-weight-bolder">Informações Básicas</h6>
+                        </div>
+
+                        <!-- Logo da Empresa -->
+                        <div class="col-12 col-md-12 mb-3">
+                            <label class="form-label">Logo da Empresa</label>
+                            <div class="d-flex align-items-center gap-3">
+                                <div *ngIf="logoUrl && !showCropper" class="border rounded p-2">
+                                    <img [src]="logoUrl" alt="Logo" style="max-width: 240px; max-height: 160px; object-fit: contain;">
+                                </div>
+                                <div>
+                                    <input type="file" class="d-none" #logoInput (change)="fileChangeEvent($event)" 
+                                           accept="image/*" id="logoFile">
+                                    <button type="button" class="btn btn-sm btn-outline-primary me-2" 
+                                            (click)="logoInput.click()" [disabled]="showCropper || uploadingLogo">
+                                        <i class="fas fa-upload me-1"></i> {{ logoUrl ? 'Alterar' : 'Selecionar' }} Logo
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                                            *ngIf="logoUrl && !showCropper" (click)="removeLogo()"
+                                            [disabled]="uploadingLogo">
+                                        <i class="fas fa-trash me-1"></i> Remover
+                                    </button>
+                                </div>
+                            </div>
+                            <small class="text-muted d-block mt-1">Proporção recomendada: 3:2 (ex: 120x80 até 1200x800)</small>
+                        </div>
+
+                        <!-- Modal/Area de Crop -->
+                        <div class="col-12" *ngIf="showCropper">
+                            <div class="card border-primary">
+                                <div class="card-body">
+                                    <h6 class="card-title">Ajustar Logo</h6>
+                                    <div class="cropper-wrapper" style="max-height: 400px;">
+                                        <image-cropper
+                                            [imageChangedEvent]="imageChangedEvent"
+                                            [maintainAspectRatio]="true"
+                                            [aspectRatio]="3/2"
+                                            [resizeToWidth]="1200"
+                                            format="png"
+                                            (imageCropped)="imageCropped($event)"
+                                            (imageLoaded)="imageLoaded()"
+                                            (cropperReady)="cropperReady()"
+                                            (loadImageFailed)="loadImageFailed()">
+                                        </image-cropper>
+                                    </div>
+                                    <div class="d-flex gap-2 mt-3">
+                                        <button type="button" class="btn btn-success" 
+                                                (click)="uploadCroppedImage()" [disabled]="uploadingLogo">
+                                            <span *ngIf="uploadingLogo" class="spinner-border spinner-border-sm me-1"></span>
+                                            {{ uploadingLogo ? 'Enviando...' : 'Confirmar e Enviar' }}
+                                        </button>
+                                        <button type="button" class="btn btn-secondary" 
+                                                (click)="cancelCrop()" [disabled]="uploadingLogo">
+                                            Cancelar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label for="nome" class="form-label">Nome *</label>
+                            <input type="text" class="form-control" id="nome" formControlName="nome"
+                                placeholder="Nome da empresa">
+                            <div class="text-danger small mt-1"
+                                *ngIf="form.get('nome')?.invalid && form.get('nome')?.touched">
+                                O nome é obrigatório
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label for="razao_social" class="form-label">Razão Social *</label>
+                            <input type="text" class="form-control" id="razao_social" formControlName="razao_social"
+                                placeholder="Razão social">
+                            <div class="text-danger small mt-1"
+                                *ngIf="form.get('razao_social')?.invalid && form.get('razao_social')?.touched">
+                                A razão social é obrigatória
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-3">
+                            <label for="doc_type" class="form-label">Tipo de Documento *</label>
+                            <select class="form-select" id="doc_type" formControlName="doc_type">
+                                <option value="CPF">CPF</option>
+                                <option value="CNPJ">CNPJ</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-md-3">
+                            <label for="documento" class="form-label">Documento</label>
+                            <input type="text" class="form-control" id="documento" formControlName="documento"
+                                placeholder="CPF/CNPJ" readonly>
+                            <small class="text-muted">Campo não editável</small>
+                        </div>
+
+                        <div class="col-12 col-md-3">
+                            <label for="email" class="form-label">Email *</label>
+                            <input type="email" class="form-control" id="email" formControlName="email"
+                                placeholder="email@exemplo.com">
+                            <div class="text-danger small mt-1"
+                                *ngIf="form.get('email')?.invalid && form.get('email')?.touched">
+                                Email inválido
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-3">
+                            <label for="telefones" class="form-label">Telefones</label>
+                            <input type="text" class="form-control" id="telefones" formControlName="telefones"
+                                placeholder="91983045923, 9133334444">
+                            <small class="text-muted">Separe múltiplos telefones por vírgula</small>
+                        </div>
+
+                        <div class="col-12 col-md-3">
+                            <label for="codigo_acesso" class="form-label">Código de Acesso</label>
+                            <input type="text" class="form-control" id="codigo_acesso" formControlName="codigo_acesso"
+                                placeholder="000000" readonly>
+                            <small class="text-muted">Campo não editável</small>
+                        </div>
+
+                        <!-- <div class="col-12 col-md-3">
+                            <label class="form-label">Status</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" formControlName="ativo"
+                                    id="ativoSwitch" [disabled]="true">
+                                <label class="form-check-label" for="ativoSwitch">Empresa Ativa</label>
+                            </div>
+                            <small class="text-muted">Campo não editável</small>
+                        </div> -->
+                        <!-- Endereço -->
+                        <div class="col-12 mt-4" formGroupName="endereco">
+                            <h6 class="text-uppercase text-body text-xs font-weight-bolder">Endereço</h6>
+                        </div>
+
+                        <div class="col-12 col-md-3" formGroupName="endereco">
+                            <label for="cep" class="form-label">CEP</label>
+                            <input type="text" class="form-control" id="cep" formControlName="cep" 
+                                placeholder="00000-000" (blur)="buscarCep()">
+                        </div>
+
+                        <div class="col-12 col-md-6" formGroupName="endereco">
+                            <label for="logradouro" class="form-label">Logradouro</label>
+                            <input type="text" class="form-control" id="logradouro" formControlName="logradouro"
+                                placeholder="Rua, Avenida...">
+                        </div>
+
+                        <div class="col-12 col-md-3" formGroupName="endereco">
+                            <label for="numero" class="form-label">Número</label>
+                            <input type="text" class="form-control" id="numero" formControlName="numero" 
+                                placeholder="123">
+                        </div>
+
+                        <div class="col-12 col-md-3" formGroupName="endereco">
+                            <label for="complemento" class="form-label">Complemento</label>
+                            <input type="text" class="form-control" id="complemento" formControlName="complemento"
+                                placeholder="Casa, Apto...">
+                        </div>
+
+                        <div class="col-12 col-md-3" formGroupName="endereco">
+                            <label for="bairro" class="form-label">Bairro</label>
+                            <input type="text" class="form-control" id="bairro" formControlName="bairro" 
+                                placeholder="Bairro">
+                        </div>
+
+                        <div class="col-12 col-md-3" formGroupName="endereco">
+                            <label for="cidade" class="form-label">Cidade</label>
+                            <input type="text" class="form-control" id="cidade" formControlName="cidade" 
+                                placeholder="Cidade">
+                        </div>
+
+                        <div class="col-12 col-md-2" formGroupName="endereco">
+                            <label for="estado" class="form-label">Estado</label>
+                            <input type="text" class="form-control" id="estado" formControlName="estado" 
+                                placeholder="UF" maxlength="2">
+                        </div>
+
+                        <div class="col-12 col-md-1" formGroupName="endereco">
+                            <label for="pais" class="form-label">País</label>
+                            <input type="text" class="form-control" id="pais" formControlName="pais" 
+                                placeholder="BR" maxlength="2">
+                        </div>
+
+                        <!-- Juros -->
+                        <div class="col-12 mt-4" formGroupName="juros">
+                            <h6 class="text-uppercase text-body text-xs font-weight-bolder">Configuração de Juros</h6>
+                        </div>
+
+                        <div class="col-12 col-md-4" formGroupName="juros">
+                            <label for="juros_tipo" class="form-label">Tipo de Juros</label>
+                            <select class="form-select" id="juros_tipo" formControlName="tipo">
+                                <option value="percentual">Percentual</option>
+                                <option value="fixo">Valor Fixo</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-md-4" formGroupName="juros">
+                            <label for="juros_dias" class="form-label">Dias para Aplicar</label>
+                            <input type="number" class="form-control" id="juros_dias" formControlName="dias" 
+                                placeholder="0">
+                        </div>
+
+                        <div class="col-12 col-md-4" formGroupName="juros">
+                            <label for="juros_valor" class="form-label">Valor</label>
+                            <input type="number" class="form-control" id="juros_valor" formControlName="valor" 
+                                placeholder="0" step="0.01">
+                        </div>
+
+                        <!-- Multa -->
+                        <div class="col-12 mt-4" formGroupName="multa">
+                            <h6 class="text-uppercase text-body text-xs font-weight-bolder">Configuração de Multa</h6>
+                        </div>
+
+                        <div class="col-12 col-md-4" formGroupName="multa">
+                            <label for="multa_tipo" class="form-label">Tipo de Multa</label>
+                            <select class="form-select" id="multa_tipo" formControlName="tipo">
+                                <option value="percentual">Percentual</option>
+                                <option value="fixo">Valor Fixo</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-md-4" formGroupName="multa">
+                            <label for="multa_dias" class="form-label">Dias para Aplicar</label>
+                            <input type="number" class="form-control" id="multa_dias" formControlName="dias" 
+                                placeholder="0">
+                        </div>
+
+                        <div class="col-12 col-md-4" formGroupName="multa">
+                            <label for="multa_valor" class="form-label">Valor</label>
+                            <input type="number" class="form-control" id="multa_valor" formControlName="valor" 
+                                placeholder="0" step="0.01">
+                        </div>
+
+                        <!-- Botões -->
+                        <div class="col-12 mt-4">
+                            <button type="submit" class="btn btn-success" [disabled]="form.invalid || loading">
+                                <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+                                {{ loading ? 'Salvando...' : 'Salvar' }}
+                            </button>
+                            <button type="button" class="btn btn-danger ms-2" [disabled]="loading">Cancelar</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
