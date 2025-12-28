@@ -59,6 +59,7 @@ export class VendasPdvComponent implements OnInit {
   almoxarifados: any[] = [];
   almoxarifadoPrincipal: any = null;
   pecaFocadaIndex: number = 0; // Índice da peça focada para navegação por teclado
+  precoVendaPecas: number = 0; // Preço de venda a ser aplicado às peças selecionadas
 
   itensPedido: ItemPedido[] = [];
 
@@ -509,6 +510,8 @@ export class VendasPdvComponent implements OnInit {
     // Sempre usar o almoxarifado principal
     this.almoxarifadoSelecionadoPecas = this.almoxarifadoPrincipal;
     this.pecaFocadaIndex = 0; // Reset do índice focado
+    // Inicializar o preço de venda com o preço do formulário ou do produto
+    this.precoVendaPecas = parseFloat(this.formItem.value.preco_unitario) || this.produtoSelecionado.preco_venda || 0;
     this.carregarPecas();
     this.modalService.open(this.modalPecas, { size: 'xl', scrollable: true });
 
@@ -650,8 +653,14 @@ export class VendasPdvComponent implements OnInit {
       return;
     }
 
+    // Validar se o preço de venda foi informado
+    if (!this.precoVendaPecas || this.precoVendaPecas <= 0) {
+      this.alert.showWarning('Informe um preço de venda válido');
+      return;
+    }
+
     // Adicionar ou reativar cada peça
-    const preco_unitario = parseFloat(this.formItem.value.preco_unitario) || this.produtoSelecionado.preco_venda;
+    const preco_unitario = this.precoVendaPecas;
 
     this.pecasSelecionadas.forEach(peca => {
       // Verificar se é uma peça que foi removida temporariamente
@@ -822,8 +831,45 @@ export class VendasPdvComponent implements OnInit {
       this.itensPedido[this.indexItemEditado].valor_total = novaQuantidade * novoPrecoUnitario;
     }
 
+    // Verificar se este é o primeiro item do produto na lista
+    const produtoId = this.itemSendoEditado.produto._id;
+    const primeiroIndexDoProduto = this.itensPedido.findIndex(
+      item => !item._removido && item.produto._id === produtoId
+    );
+
+    // Se for o primeiro item do produto e o preço foi alterado, atualizar os demais itens do mesmo produto
+    if (primeiroIndexDoProduto === this.indexItemEditado) {
+      const precoAnterior = this.itemSendoEditado.preco_unitario;
+      
+      if (novoPrecoUnitario !== precoAnterior) {
+        let itensAtualizados = 0;
+        
+        this.itensPedido.forEach((item, index) => {
+          // Atualizar apenas outros itens do mesmo produto (não removidos e não é o item atual)
+          if (
+            !item._removido && 
+            index !== this.indexItemEditado && 
+            item.produto._id === produtoId
+          ) {
+            item.preco_unitario = novoPrecoUnitario;
+            item.valor_total = item.quantidade * novoPrecoUnitario;
+            itensAtualizados++;
+          }
+        });
+
+        if (itensAtualizados > 0) {
+          this.alert.showSuccess(`Item atualizado e preço replicado para ${itensAtualizados} item(ns) do mesmo produto`);
+        } else {
+          this.alert.showSuccess('Item atualizado');
+        }
+      } else {
+        this.alert.showSuccess('Item atualizado');
+      }
+    } else {
+      this.alert.showSuccess('Item atualizado');
+    }
+
     this.calcularTotais();
-    this.alert.showSuccess('Item atualizado');
     this.fecharModalEditarItem();
   }
 
