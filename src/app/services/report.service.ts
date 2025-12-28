@@ -1,333 +1,364 @@
-import { Injectable } from '@angular/core';
+import { Injectable, isDevMode } from '@angular/core';
 import html2pdf from 'html2pdf.js';
 
+interface Empresa {
+  _id: string,
+  logo?: string;
+  nome: string;
+  logoBase64?: string | null;
+  razao_social?: string;
+  codigo_acesso?: string;
+  documento?: string;
+  doc_type?: string;
+}
+
 @Injectable({
-    providedIn: 'root'
+  providedIn: 'root'
 })
 export class ReportService {
 
-    constructor() { }
 
-    /**
-     * Gera PDF a partir de um elemento HTML
-     * @param element Elemento HTML ou string do seletor
-     * @param filename Nome do arquivo PDF
-     * @param options Opções customizadas do html2pdf
-     */
-    async generatePDF(element: HTMLElement | string, filename: string, options?: any) {
-        const defaultOptions = {
-            margin: 10,
-            filename: filename,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
+  empresaAtiva: Empresa | null = null;
 
-        const finalOptions = { ...defaultOptions, ...options };
+  constructor() { }
 
-        try {
-            await html2pdf().set(finalOptions).from(element).save();
-            return true;
-        } catch (error) {
-            console.error('Erro ao gerar PDF:', error);
-            throw error;
-        }
+
+  async setEmpresaAtiva(empresa: Empresa) {
+    this.empresaAtiva = empresa;
+    if (empresa?.logo) {
+      this.empresaAtiva.logoBase64 = await this.imageUrlToBase64(empresa.logo);
+    }
+    if (isDevMode()) console.log('Definido empresa ativa no ReportService');
+
+  }
+
+  cleanEmpresaAtiva() {
+    this.empresaAtiva = null;
+    if (isDevMode()) console.log('Limpar empresa ativa no ReportService');
+  }
+
+  /**
+   * Gera PDF a partir de um elemento HTML
+   * @param element Elemento HTML ou string do seletor
+   * @param filename Nome do arquivo PDF
+   * @param options Opções customizadas do html2pdf
+   */
+  async generatePDF(element: HTMLElement | string, filename: string, options?: any) {
+    const defaultOptions = {
+      margin: 10,
+      filename: filename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    const finalOptions = { ...defaultOptions, ...options };
+
+    try {
+      await html2pdf().set(finalOptions).from(element).save();
+      return true;
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Gera PDF de uma venda no formato A4
+   * @param vendaData Dados da venda
+   * @param this.empresaAtiva Dados da empresa
+   */
+  async gerarRelatorioVendaA4(vendaData: any) {
+    // Converte a logo para base64 se existir
+    if (this.empresaAtiva?.logo) {
+      try {
+        this.empresaAtiva.logoBase64 = await this.imageUrlToBase64(this.empresaAtiva.logo);
+      } catch (error) {
+        console.error('Erro ao converter logo para base64:', error);
+        if (this.empresaAtiva?._id) this.empresaAtiva.logoBase64 = null;
+      }
     }
 
-    /**
-     * Gera PDF de uma venda no formato A4
-     * @param vendaData Dados da venda
-     * @param empresaData Dados da empresa
-     */
-    async gerarRelatorioVendaA4(vendaData: any, empresaData: any) {
-        // Converte a logo para base64 se existir
-        if (empresaData?.logo) {
-            try {
-                empresaData.logoBase64 = await this.imageUrlToBase64(empresaData.logo);
-            } catch (error) {
-                console.error('Erro ao converter logo para base64:', error);
-                empresaData.logoBase64 = null;
-            }
-        }
+    // Cria um elemento temporário com o template
+    const element = this.criarTemplateVendaA4(vendaData, this.empresaAtiva);
+    document.body.appendChild(element);
 
-        // Cria um elemento temporário com o template
-        const element = this.criarTemplateVendaA4(vendaData, empresaData);
-        document.body.appendChild(element);
+    const options: any = {
+      margin: [8, 8, 8, 8],
+      filename: `venda_${vendaData.codigo}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        windowHeight: element.scrollHeight,
+        height: element.scrollHeight
+      },
+      jsPDF: {
+        unit: 'mm',
+        format: 'a4',
+        orientation: 'portrait',
+        compress: true
+      },
+      pagebreak: { mode: 'avoid-all' }
+    };
 
+    try {
+      await html2pdf().set(options).from(element).save();
+      document.body.removeChild(element);
+      return true;
+    } catch (error) {
+      document.body.removeChild(element);
+      console.error('Erro ao gerar relatório de venda:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Gera PDF de uma venda no formato Bobina 80mm
+   * @param vendaData Dados da venda
+   * @param this.empresaAtiva Dados da empresa
+   */
+  async gerarRelatorioVendaBobina80mm(vendaData: any) {
+    // Cria um elemento temporário com o template
+    const element = this.criarTemplateVendaBobina80mm(vendaData, this.empresaAtiva);
+    document.body.appendChild(element);
+
+    const options: any = {
+      margin: [2, 2, 2, 2],
+      filename: `venda_${vendaData.codigo}_80mm.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: [76, 297], orientation: 'portrait' }
+    };
+
+    try {
+      await html2pdf().set(options).from(element).save();
+      document.body.removeChild(element);
+      return true;
+    } catch (error) {
+      document.body.removeChild(element);
+      console.error('Erro ao gerar relatório de venda (bobina):', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Gera PDF da conta do cliente
+   * @param contaData Dados da conta (vendas, saldos, cliente)
+   * @param this.empresaAtiva Dados da empresa
+   */
+  async gerarRelatorioConta(contaData: any) {
+    // Converte a logo para base64 se existir
+    if (this.empresaAtiva?.logo) {
+      try {
+        this.empresaAtiva.logoBase64 = await this.imageUrlToBase64(this.empresaAtiva.logo);
+      } catch (error) {
+        console.error('Erro ao converter logo para base64:', error);
+        if (this.empresaAtiva?._id) this.empresaAtiva.logoBase64 = null;
+      }
+    }
+
+    // Cria um elemento temporário com o template
+    const element = this.criarTemplateContaCliente(contaData, this.empresaAtiva);
+    document.body.appendChild(element);
+
+    const nomeCliente = contaData.cliente?.nome?.replace(/[^a-zA-Z0-9]/g, '_') || 'cliente';
+    const dataAtual = new Date().toISOString().split('T')[0];
+
+    const options: any = {
+      margin: [8, 8, 8, 8],
+      filename: `conta_${nomeCliente}_${dataAtual}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        windowHeight: element.scrollHeight,
+        height: element.scrollHeight
+      },
+      jsPDF: {
+        unit: 'mm',
+        format: 'a4',
+        orientation: 'portrait',
+        compress: true
+      },
+      pagebreak: { mode: 'avoid-all' }
+    };
+
+    try {
+      await html2pdf().set(options).from(element).save();
+      document.body.removeChild(element);
+      return true;
+    } catch (error) {
+      document.body.removeChild(element);
+      console.error('Erro ao gerar relatório de conta:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Gera relatório da conta como Blob para compartilhamento
+   * @param contaData Dados da conta
+   * @param this.empresaAtiva Dados da empresa
+   * @param tipo Tipo de saída: 'pdf' ou 'image'
+   */
+  async gerarRelatorioContaBlob(contaData: any, tipo: 'pdf' | 'image'): Promise<Blob> {
+    // Converte a logo para base64 se existir
+    if (this.empresaAtiva?.logo) {
+      try {
+        this.empresaAtiva.logoBase64 = await this.imageUrlToBase64(this.empresaAtiva.logo);
+      } catch (error) {
+        console.error('Erro ao converter logo para base64:', error);
+        this.empresaAtiva.logoBase64 = null;
+      }
+    }
+
+    // Cria um elemento temporário com o template apropriado
+    const element = tipo === 'image'
+      ? this.criarTemplateContaClienteMobile(contaData, this.empresaAtiva)
+      : this.criarTemplateContaCliente(contaData, this.empresaAtiva);
+    document.body.appendChild(element);
+
+    try {
+      if (tipo === 'pdf') {
         const options: any = {
-            margin: [8, 8, 8, 8],
-            filename: `venda_${vendaData.codigo}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { 
-                scale: 2, 
-                useCORS: true,
-                windowHeight: element.scrollHeight,
-                height: element.scrollHeight
-            },
-            jsPDF: { 
-                unit: 'mm', 
-                format: 'a4', 
-                orientation: 'portrait',
-                compress: true
-            },
-            pagebreak: { mode: 'avoid-all' }
+          margin: [8, 8, 8, 8],
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            windowHeight: element.scrollHeight,
+            height: element.scrollHeight
+          },
+          jsPDF: {
+            unit: 'mm',
+            format: 'a4',
+            orientation: 'portrait',
+            compress: true
+          },
+          pagebreak: { mode: 'avoid-all' }
         };
 
-        try {
-            await html2pdf().set(options).from(element).save();
-            document.body.removeChild(element);
-            return true;
-        } catch (error) {
-            document.body.removeChild(element);
-            console.error('Erro ao gerar relatório de venda:', error);
-            throw error;
-        }
+        const pdf = await html2pdf().set(options).from(element).output('blob');
+        document.body.removeChild(element);
+        return pdf;
+      } else {
+        // Gerar como imagem (mobile-friendly)
+        const html2canvas = (await import('html2canvas')).default;
+        const canvas = await html2canvas(element, {
+          // @ts-ignore
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          width: 375,
+          windowWidth: 375,
+          windowHeight: element.scrollHeight,
+          height: element.scrollHeight
+        });
+
+        document.body.removeChild(element);
+
+        return new Promise((resolve) => {
+          canvas.toBlob((blob) => {
+            resolve(blob!);
+          }, 'image/png', 1.0);
+        });
+      }
+    } catch (error) {
+      document.body.removeChild(element);
+      console.error('Erro ao gerar blob:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Gera relatório da conta como imagem PNG
+   * @param contaData Dados da conta
+   * @param this.empresaAtiva Dados da empresa
+   */
+  async gerarRelatorioContaImagem(contaData: any) {
+    // Converte a logo para base64 se existir
+    if (this.empresaAtiva?.logo) {
+      try {
+        this.empresaAtiva.logoBase64 = await this.imageUrlToBase64(this.empresaAtiva.logo);
+      } catch (error) {
+        console.error('Erro ao converter logo para base64:', error);
+        this.empresaAtiva.logoBase64 = null;
+      }
     }
 
-    /**
-     * Gera PDF de uma venda no formato Bobina 80mm
-     * @param vendaData Dados da venda
-     * @param empresaData Dados da empresa
-     */
-    async gerarRelatorioVendaBobina80mm(vendaData: any, empresaData: any) {
-        // Cria um elemento temporário com o template
-        const element = this.criarTemplateVendaBobina80mm(vendaData, empresaData);
-        document.body.appendChild(element);
+    // Cria um elemento temporário com o template mobile
+    const element = this.criarTemplateContaClienteMobile(contaData, this.empresaAtiva);
+    document.body.appendChild(element);
 
-        const options: any = {
-            margin: [2, 2, 2, 2],
-            filename: `venda_${vendaData.codigo}_80mm.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'mm', format: [76, 297], orientation: 'portrait' }
-        };
+    const nomeCliente = contaData.cliente?.nome?.replace(/[^a-zA-Z0-9]/g, '_') || 'cliente';
+    const dataAtual = new Date().toISOString().split('T')[0];
 
-        try {
-            await html2pdf().set(options).from(element).save();
-            document.body.removeChild(element);
-            return true;
-        } catch (error) {
-            document.body.removeChild(element);
-            console.error('Erro ao gerar relatório de venda (bobina):', error);
-            throw error;
+    try {
+      const html2canvas = (await import('html2canvas')).default;
+      const canvas = await html2canvas(element, {
+        // @ts-ignore
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        width: 375,
+        windowWidth: 375,
+        windowHeight: element.scrollHeight,
+        height: element.scrollHeight
+      });
+
+      document.body.removeChild(element);
+
+      // Converter canvas para blob e fazer download
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `conta_${nomeCliente}_${dataAtual}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
         }
+      }, 'image/png', 1.0);
+
+      return true;
+    } catch (error) {
+      document.body.removeChild(element);
+      console.error('Erro ao gerar imagem:', error);
+      throw error;
     }
+  }
 
-    /**
-     * Gera PDF da conta do cliente
-     * @param contaData Dados da conta (vendas, saldos, cliente)
-     * @param empresaData Dados da empresa
-     */
-    async gerarRelatorioConta(contaData: any, empresaData: any) {
-        // Converte a logo para base64 se existir
-        if (empresaData?.logo) {
-            try {
-                empresaData.logoBase64 = await this.imageUrlToBase64(empresaData.logo);
-            } catch (error) {
-                console.error('Erro ao converter logo para base64:', error);
-                empresaData.logoBase64 = null;
-            }
-        }
+  /**
+   * Cria o template HTML para o relatório de venda A4
+   */
+  private criarTemplateVendaA4(venda: any, empresa: any): HTMLElement {
+    const div = document.createElement('div');
+    div.style.width = '194mm'; // 210mm - 2x8mm de margem
+    div.style.maxWidth = '194mm';
+    div.style.padding = '0';
+    div.style.backgroundColor = 'white';
+    div.style.fontFamily = 'Arial, sans-serif';
+    div.style.fontSize = '11px';
+    div.style.color = '#333';
+    div.style.boxSizing = 'border-box';
+    div.style.overflow = 'hidden';
 
-        // Cria um elemento temporário com o template
-        const element = this.criarTemplateContaCliente(contaData, empresaData);
-        document.body.appendChild(element);
+    const dataVenda = new Date(venda.data).toLocaleDateString('pt-BR');
+    const dataHoraEmissao = new Date().toLocaleString('pt-BR');
 
-        const nomeCliente = contaData.cliente?.nome?.replace(/[^a-zA-Z0-9]/g, '_') || 'cliente';
-        const dataAtual = new Date().toISOString().split('T')[0];
+    // Calcula totais
+    const totalPeso = venda.itens.reduce((acc: number, item: any) =>
+      acc + (item.peca?.peso || 0), 0);
 
-        const options: any = {
-            margin: [8, 8, 8, 8],
-            filename: `conta_${nomeCliente}_${dataAtual}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { 
-                scale: 2, 
-                useCORS: true,
-                windowHeight: element.scrollHeight,
-                height: element.scrollHeight
-            },
-            jsPDF: { 
-                unit: 'mm', 
-                format: 'a4', 
-                orientation: 'portrait',
-                compress: true
-            },
-            pagebreak: { mode: 'avoid-all' }
-        };
+    // Agrupa itens por produto quando for ESTOQUE_PECA
+    const itensAgrupados = this.agruparItensPorProduto(venda.itens);
 
-        try {
-            await html2pdf().set(options).from(element).save();
-            document.body.removeChild(element);
-            return true;
-        } catch (error) {
-            document.body.removeChild(element);
-            console.error('Erro ao gerar relatório de conta:', error);
-            throw error;
-        }
-    }
+    // Conta total de unidades/peças (cada item da venda original é uma unidade)
+    const totalUnidades = venda.itens.length;
 
-    /**
-     * Gera relatório da conta como Blob para compartilhamento
-     * @param contaData Dados da conta
-     * @param empresaData Dados da empresa
-     * @param tipo Tipo de saída: 'pdf' ou 'image'
-     */
-    async gerarRelatorioContaBlob(contaData: any, empresaData: any, tipo: 'pdf' | 'image'): Promise<Blob> {
-        // Converte a logo para base64 se existir
-        if (empresaData?.logo) {
-            try {
-                empresaData.logoBase64 = await this.imageUrlToBase64(empresaData.logo);
-            } catch (error) {
-                console.error('Erro ao converter logo para base64:', error);
-                empresaData.logoBase64 = null;
-            }
-        }
-
-        // Cria um elemento temporário com o template apropriado
-        const element = tipo === 'image' 
-            ? this.criarTemplateContaClienteMobile(contaData, empresaData)
-            : this.criarTemplateContaCliente(contaData, empresaData);
-        document.body.appendChild(element);
-
-        try {
-            if (tipo === 'pdf') {
-                const options: any = {
-                    margin: [8, 8, 8, 8],
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { 
-                        scale: 2, 
-                        useCORS: true,
-                        windowHeight: element.scrollHeight,
-                        height: element.scrollHeight
-                    },
-                    jsPDF: { 
-                        unit: 'mm', 
-                        format: 'a4', 
-                        orientation: 'portrait',
-                        compress: true
-                    },
-                    pagebreak: { mode: 'avoid-all' }
-                };
-
-                const pdf = await html2pdf().set(options).from(element).output('blob');
-                document.body.removeChild(element);
-                return pdf;
-            } else {
-                // Gerar como imagem (mobile-friendly)
-                const html2canvas = (await import('html2canvas')).default;
-                const canvas = await html2canvas(element, {
-                    scale: 2,
-                    useCORS: true,
-                    backgroundColor: '#ffffff',
-                    width: 375,
-                    windowWidth: 375,
-                    windowHeight: element.scrollHeight,
-                    height: element.scrollHeight
-                });
-                
-                document.body.removeChild(element);
-                
-                return new Promise((resolve) => {
-                    canvas.toBlob((blob) => {
-                        resolve(blob!);
-                    }, 'image/png', 1.0);
-                });
-            }
-        } catch (error) {
-            document.body.removeChild(element);
-            console.error('Erro ao gerar blob:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * Gera relatório da conta como imagem PNG
-     * @param contaData Dados da conta
-     * @param empresaData Dados da empresa
-     */
-    async gerarRelatorioContaImagem(contaData: any, empresaData: any) {
-        // Converte a logo para base64 se existir
-        if (empresaData?.logo) {
-            try {
-                empresaData.logoBase64 = await this.imageUrlToBase64(empresaData.logo);
-            } catch (error) {
-                console.error('Erro ao converter logo para base64:', error);
-                empresaData.logoBase64 = null;
-            }
-        }
-
-        // Cria um elemento temporário com o template mobile
-        const element = this.criarTemplateContaClienteMobile(contaData, empresaData);
-        document.body.appendChild(element);
-
-        const nomeCliente = contaData.cliente?.nome?.replace(/[^a-zA-Z0-9]/g, '_') || 'cliente';
-        const dataAtual = new Date().toISOString().split('T')[0];
-
-        try {
-            const html2canvas = (await import('html2canvas')).default;
-            const canvas = await html2canvas(element, {
-                scale: 2,
-                useCORS: true,
-                backgroundColor: '#ffffff',
-                width: 375,
-                windowWidth: 375,
-                windowHeight: element.scrollHeight,
-                height: element.scrollHeight
-            });
-            
-            document.body.removeChild(element);
-            
-            // Converter canvas para blob e fazer download
-            canvas.toBlob((blob) => {
-                if (blob) {
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `conta_${nomeCliente}_${dataAtual}.png`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(url);
-                }
-            }, 'image/png', 1.0);
-
-            return true;
-        } catch (error) {
-            document.body.removeChild(element);
-            console.error('Erro ao gerar imagem:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * Cria o template HTML para o relatório de venda A4
-     */
-    private criarTemplateVendaA4(venda: any, empresa: any): HTMLElement {
-        const div = document.createElement('div');
-        div.style.width = '194mm'; // 210mm - 2x8mm de margem
-        div.style.maxWidth = '194mm';
-        div.style.padding = '0';
-        div.style.backgroundColor = 'white';
-        div.style.fontFamily = 'Arial, sans-serif';
-        div.style.fontSize = '11px';
-        div.style.color = '#333';
-        div.style.boxSizing = 'border-box';
-        div.style.overflow = 'hidden';
-
-        const dataVenda = new Date(venda.data).toLocaleDateString('pt-BR');
-        const dataHoraEmissao = new Date().toLocaleString('pt-BR');
-
-        // Calcula totais
-        const totalPeso = venda.itens.reduce((acc: number, item: any) =>
-            acc + (item.peca?.peso || 0), 0);
-
-        // Agrupa itens por produto quando for ESTOQUE_PECA
-        const itensAgrupados = this.agruparItensPorProduto(venda.itens);
-        
-        // Conta total de unidades/peças (cada item da venda original é uma unidade)
-        const totalUnidades = venda.itens.length;
-
-        div.innerHTML = `
+    div.innerHTML = `
       <style>
         .report-container * {
           margin: 0;
@@ -650,31 +681,31 @@ export class ReportService {
       </div>
     `;
 
-        return div;
-    }
+    return div;
+  }
 
-    /**
-     * Cria o template HTML para o relatório de venda em Bobina 80mm
-     */
-    private criarTemplateVendaBobina80mm(venda: any, empresa: any): HTMLElement {
-        const div = document.createElement('div');
-        div.style.width = '76mm';
-        div.style.padding = '2mm';
-        div.style.backgroundColor = 'white';
-        div.style.fontFamily = 'Courier, monospace';
-        div.style.fontSize = '9px';
-        div.style.color = '#000';
+  /**
+   * Cria o template HTML para o relatório de venda em Bobina 80mm
+   */
+  private criarTemplateVendaBobina80mm(venda: any, empresa: any): HTMLElement {
+    const div = document.createElement('div');
+    div.style.width = '76mm';
+    div.style.padding = '2mm';
+    div.style.backgroundColor = 'white';
+    div.style.fontFamily = 'Courier, monospace';
+    div.style.fontSize = '9px';
+    div.style.color = '#000';
 
-        const dataVenda = new Date(venda.data).toLocaleDateString('pt-BR');
-        const dataHoraEmissao = new Date().toLocaleString('pt-BR');
+    const dataVenda = new Date(venda.data).toLocaleDateString('pt-BR');
+    const dataHoraEmissao = new Date().toLocaleString('pt-BR');
 
-        // Agrupa itens por produto quando for ESTOQUE_PECA
-        const itensAgrupados = this.agruparItensPorProduto(venda.itens);
-        
-        // Conta total de unidades/peças (cada item da venda original é uma unidade)
-        const totalUnidades = venda.itens.length;
+    // Agrupa itens por produto quando for ESTOQUE_PECA
+    const itensAgrupados = this.agruparItensPorProduto(venda.itens);
 
-        div.innerHTML = `
+    // Conta total de unidades/peças (cada item da venda original é uma unidade)
+    const totalUnidades = venda.itens.length;
+
+    div.innerHTML = `
       <style>
         .bobina-container {
           width: 100%;
@@ -814,75 +845,75 @@ export class ReportService {
       </div>
     `;
 
-        return div;
-    }
+    return div;
+  }
 
-    /**
-     * Agrupa itens por produto quando forem do tipo ESTOQUE_PECA
-     * @param itens Lista de itens da venda
-     * @returns Lista de itens agrupados
-     */
-    private agruparItensPorProduto(itens: any[]): any[] {
-        const grupos: { [key: string]: any } = {};
+  /**
+   * Agrupa itens por produto quando forem do tipo ESTOQUE_PECA
+   * @param itens Lista de itens da venda
+   * @returns Lista de itens agrupados
+   */
+  private agruparItensPorProduto(itens: any[]): any[] {
+    const grupos: { [key: string]: any } = {};
 
-        itens.forEach((item: any) => {
-            const produtoId = item.produto?._id;
-            
-            if (!produtoId) return;
+    itens.forEach((item: any) => {
+      const produtoId = item.produto?._id;
 
-            // Se for ESTOQUE_PECA, agrupa por produto
-            if (item.tipo_saida === 'ESTOQUE PECA' && item.peca) {
-                if (!grupos[produtoId]) {
-                    grupos[produtoId] = {
-                        produto: item.produto,
-                        unidade_saida: item.unidade_saida,
-                        preco_unitario: item.preco_unitario,
-                        quantidade: 0,
-                        valor_total: 0,
-                        pesos: [],
-                        tipo_saida: item.tipo_saida
-                    };
-                }
-                
-                grupos[produtoId].quantidade += item.quantidade;
-                grupos[produtoId].valor_total += item.valor_total;
-                grupos[produtoId].pesos.push(item.peca.peso.toFixed(2).replace('.', ','));
-            } else {
-                // Se não for ESTOQUE_PECA, adiciona como item individual
-                const itemKey = `${produtoId}_${Date.now()}_${Math.random()}`;
-                grupos[itemKey] = {
-                    produto: item.produto,
-                    unidade_saida: item.unidade_saida,
-                    preco_unitario: item.preco_unitario,
-                    quantidade: item.quantidade,
-                    valor_total: item.valor_total,
-                    pesos: [],
-                    tipo_saida: item.tipo_saida
-                };
-            }
-        });
+      if (!produtoId) return;
 
-        return Object.values(grupos);
-    }
+      // Se for ESTOQUE_PECA, agrupa por produto
+      if (item.tipo_saida === 'ESTOQUE PECA' && item.peca) {
+        if (!grupos[produtoId]) {
+          grupos[produtoId] = {
+            produto: item.produto,
+            unidade_saida: item.unidade_saida,
+            preco_unitario: item.preco_unitario,
+            quantidade: 0,
+            valor_total: 0,
+            pesos: [],
+            tipo_saida: item.tipo_saida
+          };
+        }
 
-    /**
-     * Cria o template HTML para o relatório de conta do cliente
-     */
-    private criarTemplateContaCliente(conta: any, empresa: any): HTMLElement {
-        const div = document.createElement('div');
-        div.style.width = '194mm';
-        div.style.maxWidth = '194mm';
-        div.style.padding = '0';
-        div.style.backgroundColor = 'white';
-        div.style.fontFamily = 'Arial, sans-serif';
-        div.style.fontSize = '11px';
-        div.style.color = '#333';
-        div.style.boxSizing = 'border-box';
-        div.style.overflow = 'hidden';
+        grupos[produtoId].quantidade += item.quantidade;
+        grupos[produtoId].valor_total += item.valor_total;
+        grupos[produtoId].pesos.push(item.peca.peso.toFixed(2).replace('.', ','));
+      } else {
+        // Se não for ESTOQUE_PECA, adiciona como item individual
+        const itemKey = `${produtoId}_${Date.now()}_${Math.random()}`;
+        grupos[itemKey] = {
+          produto: item.produto,
+          unidade_saida: item.unidade_saida,
+          preco_unitario: item.preco_unitario,
+          quantidade: item.quantidade,
+          valor_total: item.valor_total,
+          pesos: [],
+          tipo_saida: item.tipo_saida
+        };
+      }
+    });
 
-        const dataEmissao = new Date().toLocaleString('pt-BR');
+    return Object.values(grupos);
+  }
 
-        div.innerHTML = `
+  /**
+   * Cria o template HTML para o relatório de conta do cliente
+   */
+  private criarTemplateContaCliente(conta: any, empresa: any): HTMLElement {
+    const div = document.createElement('div');
+    div.style.width = '194mm';
+    div.style.maxWidth = '194mm';
+    div.style.padding = '0';
+    div.style.backgroundColor = 'white';
+    div.style.fontFamily = 'Arial, sans-serif';
+    div.style.fontSize = '11px';
+    div.style.color = '#333';
+    div.style.boxSizing = 'border-box';
+    div.style.overflow = 'hidden';
+
+    const dataEmissao = new Date().toLocaleString('pt-BR');
+
+    div.innerHTML = `
       <style>
         .conta-container * {
           margin: 0;
@@ -1153,26 +1184,26 @@ export class ReportService {
       </div>
     `;
 
-        return div;
-    }
+    return div;
+  }
 
-    /**
-     * Cria template compacto para visualização mobile (imagem)
-     */
-    private criarTemplateContaClienteMobile(conta: any, empresa: any): HTMLElement {
-        const div = document.createElement('div');
-        div.style.width = '375px';
-        div.style.maxWidth = '375px';
-        div.style.padding = '8px';
-        div.style.backgroundColor = 'white';
-        div.style.fontFamily = 'Arial, sans-serif';
-        div.style.fontSize = '11px';
-        div.style.color = '#333';
-        div.style.boxSizing = 'border-box';
+  /**
+   * Cria template compacto para visualização mobile (imagem)
+   */
+  private criarTemplateContaClienteMobile(conta: any, empresa: any): HTMLElement {
+    const div = document.createElement('div');
+    div.style.width = '375px';
+    div.style.maxWidth = '375px';
+    div.style.padding = '8px';
+    div.style.backgroundColor = 'white';
+    div.style.fontFamily = 'Arial, sans-serif';
+    div.style.fontSize = '11px';
+    div.style.color = '#333';
+    div.style.boxSizing = 'border-box';
 
-        const dataEmissao = new Date().toLocaleString('pt-BR');
+    const dataEmissao = new Date().toLocaleString('pt-BR');
 
-        div.innerHTML = `
+    div.innerHTML = `
       <style>
         .conta-mobile * {
           margin: 0;
@@ -1438,158 +1469,158 @@ export class ReportService {
       </div>
     `;
 
-        return div;
-    }
+    return div;
+  }
 
-    /**
-     * Agrupa produtos para PDF (usando a nova estrutura de dados)
-     */
-    private agruparProdutosParaPDF(produtos: any[]): any[] {
-        if (!produtos || produtos.length === 0) return [];
+  /**
+   * Agrupa produtos para PDF (usando a nova estrutura de dados)
+   */
+  private agruparProdutosParaPDF(produtos: any[]): any[] {
+    if (!produtos || produtos.length === 0) return [];
 
-        return produtos.map((item: any) => {
-            // Extrai os pesos das peças, se existirem
-            const pesos = item.pecas && item.pecas.length > 0 
-                ? item.pecas.map((peca: any) => `${peca.peso.toFixed(2).replace('.', ',')}`)
-                : [];
+    return produtos.map((item: any) => {
+      // Extrai os pesos das peças, se existirem
+      const pesos = item.pecas && item.pecas.length > 0
+        ? item.pecas.map((peca: any) => `${peca.peso.toFixed(2).replace('.', ',')}`)
+        : [];
 
-            return {
-                produto: item.produto,
-                quantidade: item.quantidade,
-                valor_total: item.valor_total,
-                pesos: pesos
-            };
-        });
-    }
+      return {
+        produto: item.produto,
+        quantidade: item.quantidade,
+        valor_total: item.valor_total,
+        pesos: pesos
+      };
+    });
+  }
 
-    /**
-     * Agrupa itens por produto de forma simples (para o relatório de conta - LEGADO)
-     */
-    private agruparItensPorProdutoSimples(itens: any[]): any[] {
-        const grupos: { [key: string]: any } = {};
+  /**
+   * Agrupa itens por produto de forma simples (para o relatório de conta - LEGADO)
+   */
+  private agruparItensPorProdutoSimples(itens: any[]): any[] {
+    const grupos: { [key: string]: any } = {};
 
-        itens.forEach((item: any) => {
-            const produtoId = item.produto?._id;
-            
-            if (!produtoId) return;
+    itens.forEach((item: any) => {
+      const produtoId = item.produto?._id;
 
-            // Se for ESTOQUE_PECA, agrupa por produto
-            if (item.tipo_saida === 'ESTOQUE PECA' && item.peca) {
-                if (!grupos[produtoId]) {
-                    grupos[produtoId] = {
-                        produto: item.produto,
-                        unidade_saida: item.unidade_saida || item.produto?.unidade,
-                        quantidade: 0,
-                        valor_total: 0,
-                        pesos: [],
-                        tipo_saida: item.tipo_saida
-                    };
-                }
-                
-                grupos[produtoId].quantidade += item.quantidade;
-                grupos[produtoId].valor_total += item.valor_total;
-                grupos[produtoId].pesos.push(item.peca.peso.toFixed(2).replace('.', ','));
-            } else {
-                // Se não for ESTOQUE_PECA, agrupa normalmente
-                if (!grupos[produtoId]) {
-                    grupos[produtoId] = {
-                        produto: item.produto,
-                        unidade_saida: item.unidade_saida || item.produto?.unidade,
-                        quantidade: 0,
-                        valor_total: 0,
-                        pesos: [],
-                        tipo_saida: item.tipo_saida
-                    };
-                }
-                
-                grupos[produtoId].quantidade += item.quantidade;
-                grupos[produtoId].valor_total += item.valor_total;
-            }
-        });
+      if (!produtoId) return;
 
-        return Object.values(grupos);
-    }
-
-    /**
-     * Formata CPF ou CNPJ
-     * @param value Documento sem formatação
-     * @returns Documento formatado
-     */
-    private formatarDocumento(value: string): string {
-        if (!value) return value;
-        
-        let val = value.toString().replace(/\D/g, '');
-
-        if (val.length <= 11) {
-            // CPF mask: 000.000.000-00
-            val = val.replace(/(\d{3})(\d)/, '$1.$2');
-            val = val.replace(/(\d{3})(\d)/, '$1.$2');
-            val = val.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-        } else {
-            // CNPJ mask: 00.000.000/0000-00
-            val = val.replace(/^(\d{2})(\d)/, '$1.$2');
-            val = val.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
-            val = val.replace(/\.(\d{3})(\d)/, '.$1/$2');
-            val = val.replace(/(\d{4})(\d)/, '$1-$2');
+      // Se for ESTOQUE_PECA, agrupa por produto
+      if (item.tipo_saida === 'ESTOQUE PECA' && item.peca) {
+        if (!grupos[produtoId]) {
+          grupos[produtoId] = {
+            produto: item.produto,
+            unidade_saida: item.unidade_saida || item.produto?.unidade,
+            quantidade: 0,
+            valor_total: 0,
+            pesos: [],
+            tipo_saida: item.tipo_saida
+          };
         }
 
-        return val;
-    }
-
-    /**
-     * Formata telefone
-     * @param value Telefone sem formatação
-     * @returns Telefone formatado
-     */
-    private formatarTelefone(value: string): string {
-        if (!value) return value;
-        
-        let val = value.toString().replace(/\D/g, '');
-
-        if (val.length === 11) {
-            val = val.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-        } else if (val.length === 10) {
-            val = val.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+        grupos[produtoId].quantidade += item.quantidade;
+        grupos[produtoId].valor_total += item.valor_total;
+        grupos[produtoId].pesos.push(item.peca.peso.toFixed(2).replace('.', ','));
+      } else {
+        // Se não for ESTOQUE_PECA, agrupa normalmente
+        if (!grupos[produtoId]) {
+          grupos[produtoId] = {
+            produto: item.produto,
+            unidade_saida: item.unidade_saida || item.produto?.unidade,
+            quantidade: 0,
+            valor_total: 0,
+            pesos: [],
+            tipo_saida: item.tipo_saida
+          };
         }
 
-        return val;
+        grupos[produtoId].quantidade += item.quantidade;
+        grupos[produtoId].valor_total += item.valor_total;
+      }
+    });
+
+    return Object.values(grupos);
+  }
+
+  /**
+   * Formata CPF ou CNPJ
+   * @param value Documento sem formatação
+   * @returns Documento formatado
+   */
+  private formatarDocumento(value: string): string {
+    if (!value) return value;
+
+    let val = value.toString().replace(/\D/g, '');
+
+    if (val.length <= 11) {
+      // CPF mask: 000.000.000-00
+      val = val.replace(/(\d{3})(\d)/, '$1.$2');
+      val = val.replace(/(\d{3})(\d)/, '$1.$2');
+      val = val.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    } else {
+      // CNPJ mask: 00.000.000/0000-00
+      val = val.replace(/^(\d{2})(\d)/, '$1.$2');
+      val = val.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+      val = val.replace(/\.(\d{3})(\d)/, '.$1/$2');
+      val = val.replace(/(\d{4})(\d)/, '$1-$2');
     }
 
-    /**
-     * Formata valor monetário no padrão brasileiro
-     * @param value Valor numérico
-     * @returns Valor formatado (ex: 1.000,00)
-     */
-    private formatarValor(value: number): string {
-        if (!value && value !== 0) return '0,00';
-        
-        return value.toLocaleString('pt-BR', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
+    return val;
+  }
+
+  /**
+   * Formata telefone
+   * @param value Telefone sem formatação
+   * @returns Telefone formatado
+   */
+  private formatarTelefone(value: string): string {
+    if (!value) return value;
+
+    let val = value.toString().replace(/\D/g, '');
+
+    if (val.length === 11) {
+      val = val.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    } else if (val.length === 10) {
+      val = val.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
     }
 
-    /**
-     * Converte uma URL de imagem para base64
-     * @param url URL da imagem
-     * @returns Promise com a imagem em base64
-     */
-    private async imageUrlToBase64(url: string): Promise<string> {
-        try {
-            const response = await fetch(url);
-            const blob = await response.blob();
-            
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    resolve(reader.result as string);
-                };
-                reader.onerror = reject;
-                reader.readAsDataURL(blob);
-            });
-        } catch (error) {
-            console.error('Erro ao converter imagem para base64:', error);
-            throw error;
-        }
+    return val;
+  }
+
+  /**
+   * Formata valor monetário no padrão brasileiro
+   * @param value Valor numérico
+   * @returns Valor formatado (ex: 1.000,00)
+   */
+  private formatarValor(value: number): string {
+    if (!value && value !== 0) return '0,00';
+
+    return value.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
+
+  /**
+   * Converte uma URL de imagem para base64
+   * @param url URL da imagem
+   * @returns Promise com a imagem em base64
+   */
+  private async imageUrlToBase64(url: string): Promise<string> {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          resolve(reader.result as string);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error('Erro ao converter imagem para base64:', error);
+      throw error;
     }
+  }
 }

@@ -57,7 +57,7 @@ export class VendasVisualizacaoComponent {
         nome: 'Meu Negócio'
       };
       
-      await this.reportService.gerarRelatorioVendaA4(this.venda, empresaData);
+      await this.reportService.gerarRelatorioVendaA4(this.venda);
       this.alert.showSuccess('PDF gerado com sucesso!');
     } catch (error: any) {
       this.alert.showDanger('Erro ao gerar PDF: ' + error.message);
@@ -74,7 +74,7 @@ export class VendasVisualizacaoComponent {
         nome: 'Meu Negócio'
       };
       
-      await this.reportService.gerarRelatorioVendaBobina80mm(this.venda, empresaData);
+      await this.reportService.gerarRelatorioVendaBobina80mm(this.venda);
       this.alert.showSuccess('PDF gerado com sucesso!');
     } catch (error: any) {
       this.alert.showDanger('Erro ao gerar PDF: ' + error.message);

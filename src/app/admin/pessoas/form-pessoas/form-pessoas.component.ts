@@ -58,7 +58,7 @@ export class FormPessoasComponent implements OnInit {
       _id: this.fb.control(''),
       tipos: this.fb.control([], [Validators.required]),
       doc_type: this.fb.control('CPF', [Validators.required]),
-      documento: this.fb.control('', [Validators.required]),
+      documento: this.fb.control('', []),
       nome: this.fb.control('', [Validators.required]),
       razao_social: this.fb.control(''),
       email: this.fb.control('', [Validators.email]),

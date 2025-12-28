@@ -5,6 +5,8 @@ import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { SessaoService } from 'src/app/services/sessao.service';
 import { PushNotificationService } from 'src/app/services/push-notification.service';
+import { EndpointsService } from 'src/app/services/endpoints.service';
+import { ReportService } from 'src/app/services/report.service';
 
 @Component({
   selector: 'app-admin-container',
@@ -21,15 +23,24 @@ export class AdminContainerComponent implements OnInit {
 
   dashboard_admin_data: any = null;
 
-  constructor(private api: ApiService, private router: Router, public sessao: SessaoService, private pushNotificationService: PushNotificationService) { }
+  constructor(
+    private api: ApiService,
+    private router: Router,
+    public sessao: SessaoService,
+    private pushNotificationService: PushNotificationService,
+    private endpointService: EndpointsService,
+    private reportService: ReportService,
+  ) { }
 
   ngOnInit(): void {
     this.sessao.userSubject.subscribe(user => {
       if (user) {
         this.logged_user = user;
         this.loadMenu(false)
+        this.loadEmpresaAtiva();
       } else {
         this.loadMenu(true)
+        this.reportService.cleanEmpresaAtiva();
       }
     })
     this.getVersion();
@@ -42,6 +53,11 @@ export class AdminContainerComponent implements OnInit {
 
   closeCanvas() {
     this.offcanvasService.dismiss();
+  }
+
+  async loadEmpresaAtiva() {
+    let data = await this.endpointService.getConfiguracoesEmpresa()
+    this.reportService.setEmpresaAtiva(data)
   }
 
   loadMenu(onlyDefault: boolean = false) {
@@ -214,7 +230,7 @@ export class AdminContainerComponent implements OnInit {
         icon: 'bi bi-cash-stack me-2',
         nome: 'Financeiro',
         submenu: [
-          
+
           {
             scopes: ["financeiro.caixa_leitura"],
             icon: 'bi bi-bank me-2',

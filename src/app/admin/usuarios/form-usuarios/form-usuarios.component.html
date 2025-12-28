@@ -1,16 +1,15 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <h1 class="fw-bold ">{{form['controls']['_id']['value'] ? 'Editar usuário' : 'Adicionar usuário'}}
+            <h1 class="fw-bold ">
+                {{form['controls']['_id']['value'] ? 'Editar usuário' : 'Adicionar usuário'}}
             </h1>
-            <p class="text-muted ">{{form['controls']['_id']['value'] ? 'usuários > editar usuário' : 'usuários
-                > adicionar usuário'}} </p>
         </div>
         <div class="col-12">
             <div class="card border-0 shadow">
                 <p class="text-muted  px-3 pt-3">Os campos com * são obrigatórios</p>
                 <form [formGroup]="form" (ngSubmit)="onSubmit()" class="px-3 pb-3">
-                    <div class="row g-2">
+                    <div class="row  row-gap-3">
                         <div class="col-12">
                             <label for="dados-pessoais" class="form-label fw-bold">Dados pessoais</label>
                         </div>
@@ -63,7 +62,7 @@
                             <label for="telefones" class="form-label fw-bold">Telefones</label>
                             <div formArrayName="telefones">
                                 <div *ngFor="let telefone of telefonesArray.controls; let i = index" [formGroupName]="i"
-                                    class="row mb-2 g-2">
+                                    class="row row-gap-2 mb-2">
                                     <div class="col-4">
                                         <select class="form-control" placeholder="Tipo" formControlName="tipo">
                                             <option value="" disabled>Selecione</option>
@@ -79,7 +78,8 @@
                                             [mask]="telefone.value.tipo === 'TEL_FIXO' ? '(00) 0000-0000' : '(00) 00000-0000'">
                                     </div>
                                     <div class="col-2">
-                                        <input type="checkbox" formControlName="principal" class="form-check-input me-2" id="principal-{{i}}"> 
+                                        <input type="checkbox" formControlName="principal" class="form-check-input me-2"
+                                            id="principal-{{i}}">
                                         <label for="principal-{{i}}" class="form-check-label">Principal</label>
                                     </div>
                                     <div class="col-2">
@@ -91,6 +91,22 @@
                                     Telefone</button>
                             </div>
                         </div>
+
+                        <div class="col-12">
+                            <label for="perfil" class="form-check-label">Perfil de Acesso</label>
+                        </div>
+                        <div class="col-10">
+                            <select class="form-control" placeholder="Perfil" formControlName="perfil">
+                                <option value="">Selecione</option>
+                                <option *ngFor="let item of perfis_options" [value]="item._id">{{item.nome}}</option>
+                            </select>
+                        </div>
+                        <div class="col-2">
+                            <input type="checkbox" formControlName="perfil_ativo" class="form-check-input me-2"
+                                id="ativo-perfil">
+                            <label for="ativo-perfil" class="form-check-label">Ativo</label>
+                        </div>
+
                         <!-- Botão de Enviar -->
                         <div class="col-12 ">
                             <button type="submit" class="btn btn-success" [disabled]="form.invalid">

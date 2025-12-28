@@ -79,6 +79,19 @@ export class EndpointsService extends ApiService {
         }
         return this.get('/v1/admin/perfis' + (urlParams.toString() ? `?${urlParams.toString()}` : ''));
     }
+    getPerfisNoAuth({ perpage, page, busca, ...params }: any) {
+        let urlParams = new URLSearchParams();
+        if (perpage && page) {
+            urlParams.append('perpage', perpage);
+            urlParams.append('page', page);
+        }
+        if (busca) urlParams.append('busca', busca);
+        for (const key in params) {
+            if (params[key]) urlParams.append(key, params[key]);
+        }
+        urlParams.append('skip_auth', '1')
+        return this.get('/v1/admin/perfis' + (urlParams.toString() ? `?${urlParams.toString()}` : ''));
+    }
     getPerfilById(id: string) {
         return this.get('/v1/admin/perfis/' + id);
     }

@@ -16,6 +16,7 @@ export class FormUsuariosComponent implements OnInit {
   permissoes: any = [];
   estados_options: any = [];
   cidades_options: any = [];
+  perfis_options: any = [];
   loading: boolean = false;
   loading_cidades: boolean = false;
   loading_estados: boolean = false;
@@ -38,6 +39,8 @@ export class FormUsuariosComponent implements OnInit {
           principal: this.fb.control(false)
         })
       ]),
+      perfil: this.fb.control(""),
+      perfil_ativo: this.fb.control(false),
     });
   }
 
@@ -47,18 +50,10 @@ export class FormUsuariosComponent implements OnInit {
       if (params['id']) this.getUsuario(params['id']);
       else this.resetFormUsuario();
     });
-    this.form.get('endereco.estado')?.valueChanges.subscribe((estado) => {
-      if (!!estado) this.getCidades(estado);
-    });
-    // this.form.get('endereco.cep')?.valueChanges.subscribe((cep) => {
-    //   if (!cep || cep?.length < 8) return;
-    //   this.getConsultaCEP(cep);
-    // });
   }
 
   async init() {
-    this.getEstados();
-    this.getPermissoes();
+    this.getPerfis();
   }
 
   async getUsuario(usuario_id: string) {
@@ -73,13 +68,13 @@ export class FormUsuariosComponent implements OnInit {
     this.loading = false;
   }
 
-  async getPermissoes() {
+  async getPerfis() {
     try {
-      let permissoes = await this.endpointService.getPermissoes();
-      this.permissoes = this.getPermissoesOrganizadas(permissoes);
-      console.log(JSON.stringify(this.permissoes, null, 2));
-    } catch (error) {
-
+      let perfil = await this.endpointService.getPerfisNoAuth({ perpage: 1000, page: 1 });
+      this.perfis_options = perfil.lista;
+      this.endpointService.logDev(this.perfis_options);
+    } catch (error: any) {
+      this.alert.showDanger(error);
     }
   }
 
@@ -102,31 +97,14 @@ export class FormUsuariosComponent implements OnInit {
   }
 
   setValues(usuario: any) {
+    console.log(usuario);
     this.user_data = usuario;
     this.form.get('_id')?.setValue(usuario._id);
     this.form.get('documento')?.setValue(usuario.documento);
-    if (usuario?.niveis?.indexOf('CLIENTE') > -1) this.form.get('nivel_cliente')?.setValue(true);
-    if (usuario?.niveis?.indexOf('ADMIN') > -1) this.form.get('nivel_admin')?.setValue(true);
-    if (usuario?.niveis?.indexOf('VENDEDOR') > -1) this.form.get('nivel_vendedor')?.setValue(true);
-    if (usuario?.niveis?.indexOf('SUPERVISOR VENDAS') > -1) this.form.get('nivel_supervisor')?.setValue(true);
     this.form.get('nome')?.setValue(usuario.nome);
     this.form.get('username')?.setValue(usuario.username);
     this.form.get('email')?.setValue(usuario?.email || "");
-    if (usuario?.data_nascimento?.length == 24) {
-      let data = usuario.data_nascimento.split("T")[0];
-      this.form.get('data_nascimento')?.setValue(data);
-    }
-    this.form.get('sexo')?.setValue(usuario?.sexo || "");
     this.form.get('status')?.setValue(usuario?.status || "");
-    this.form.get('endereco.cep')?.setValue(usuario.endereco?.cep);
-    this.form.get('endereco.logradouro')?.setValue(usuario.endereco?.logradouro);
-    this.form.get('endereco.numero')?.setValue(usuario.endereco?.numero);
-    this.form.get('endereco.complemento')?.setValue(usuario.endereco?.complemento);
-    this.form.get('endereco.bairro')?.setValue(usuario.endereco?.bairro);
-    this.form.get('endereco.estado')?.setValue(usuario.endereco?.estado);
-    setTimeout(() => {
-      this.form.get('endereco.cidade')?.setValue(usuario.endereco?.cidade);
-    }, 250);
     this.limparArrayTelefones();
     for (let tel of usuario.telefones) {
       const telefoneForm = this.fb.group({
@@ -136,45 +114,20 @@ export class FormUsuariosComponent implements OnInit {
       });
       this.telefonesArray.push(telefoneForm);
     }
-    if (usuario?.scopes?.length == 1 && usuario.scopes[0] == '*') {
-      this.form.get('scopes')?.disable();
-    } else {
-      const scopesArray = this.form.get('scopes') as FormArray;
-      usuario.scopes?.forEach((scope: string) => scopesArray.push(new FormControl(scope)));
-    }
+    this.form.get('perfil')?.setValue(usuario?._empresa?.perfil?._id || "");
+    this.form.get('perfil_ativo')?.setValue(usuario?._empresa?.ativo || false);
+
   }
 
   resetFormUsuario() {
     this.form.patchValue({
       _id: "",
       documento: "",
-      nivel_cliente: false,
-      nivel_admin: false,
-      nivel_vendedor: false,
       username: "",
       nome: "",
       email: "",
       senha: "",
-      data_nascimento: null,
-      sexo: "",
       status: "ATIVO",
-      endereco: {
-        cep: "",
-        logradouro: "",
-        numero: "",
-        complemento: "",
-        bairro: "",
-        cidade: "",
-        estado: ""
-      },
-      admin: {
-        status: "",
-        perfil: {
-          _id: "",
-          nome: ""
-        },
-        add_permissoes: []
-      }
     })
     this.limparArrayTelefones();
     setTimeout(() => {
@@ -186,53 +139,6 @@ export class FormUsuariosComponent implements OnInit {
     while (this.telefonesArray.length > 0) {
       this.telefonesArray.removeAt(0);
     }
-  }
-
-  async getCidades(estadoSigla: string) {
-    if (this.loading_cidades) return;
-    this.loading_cidades = true;
-    try {
-      let cidades = await this.endpointService.getCidades(estadoSigla);
-      this.endpointService.logDev(cidades);
-      this.cidades_options = cidades;
-    } catch (error) {
-      // console.log(error);;
-    }
-    this.loading_cidades = false;
-  }
-
-  async getEstados() {
-    this.loading_estados = true;
-    try {
-      let estados = await this.endpointService.getEstados();
-      this.estados_options = estados;
-    } catch (error) {
-    }
-    this.loading_estados = false;
-  }
-
-  async getConsultaCEP() {
-    let cep = this.form.get('endereco.cep')?.value;
-    if (!cep || cep?.length < 8) return;
-    if (this.loading_cep) return;
-    this.loading_cep = true;
-    try {
-      let response = await this.endpointService.getConsultaCEP(cep);
-      if (!!response?.logradouro) {
-        this.form.get('endereco.logradouro')?.setValue(response.logradouro);
-        this.form.get('endereco.bairro')?.setValue(response.bairro);
-        this.form.get('endereco.estado')?.setValue(response.uf);
-        this.form.get('endereco.cidade')?.setValue(response.localidade);
-      }
-    } catch (error) {
-      this.endpointService.logDev(error);
-    }
-    this.loading_cep = false;
-
-  }
-
-  get isNivelAdmin() {
-    return this.form.get('nivel_admin')?.value;
   }
 
   get telefonesArray(): FormArray {
@@ -250,22 +156,6 @@ export class FormUsuariosComponent implements OnInit {
 
   removeTelefone(index: number): void {
     this.telefonesArray.removeAt(index);
-  }
-
-  // Verifica se a permissão já está no FormArray
-  temScope(scopeKey: string): boolean {
-    return this.form.get('scopes')?.value.includes(scopeKey);
-  }
-
-  // Adiciona ou remove do FormArray
-  toggleScope(event: any, scopeKey: any): void {
-    const scopes = this.form.get('scopes') as FormArray;
-    if (event?.target?.checked && !scopes.value.includes(scopeKey)) {
-      scopes.push(new FormControl(scopeKey));
-    } else if (!event?.target?.checked) {
-      const index = scopes.controls.findIndex(ctrl => ctrl.value === scopeKey);
-      if (index > -1) scopes.removeAt(index);
-    }
   }
 
   async onSubmit() {

@@ -7,6 +7,7 @@ import { Router } from '@angular/router';
 import { EndpointsService } from 'src/app/services/endpoints.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { CadastroPessoaModalComponent } from 'src/app/components/cadastro-pessoa-modal/cadastro-pessoa-modal.component';
+import { AlertService } from 'src/app/services/alert.service';
 
 
 
@@ -28,10 +29,11 @@ export class LoginComponent implements OnInit {
   step: number = 1;
 
   constructor(
-    private fb: FormBuilder, 
-    private api: ApiService, 
-    public sessao: SessaoService, 
-    private router: Router, 
+    private fb: FormBuilder,
+    private api: ApiService,
+    public sessao: SessaoService,
+    private alert: AlertService,
+    private router: Router,
     private endpoint: EndpointsService,
     private modalService: NgbModal
   ) {
@@ -98,15 +100,15 @@ export class LoginComponent implements OnInit {
       let data = await this.endpoint.getEmpresaByCodigoAtivacao(codigo_ativacao);
       this.sessao.setEmpresaAtiva(data);
       this.step = 2;
-    } catch (error) {
-      this.api.logDev(error);
+    } catch (error: any) {
+      this.alert.showDanger(error);
     } finally {
       this.loading_activation = false;
     }
   }
 
   abrirModalCadastro() {
-    const modalRef = this.modalService.open(CadastroPessoaModalComponent, { 
+    const modalRef = this.modalService.open(CadastroPessoaModalComponent, {
       size: 'lg',
       backdrop: 'static',
       keyboard: false
@@ -114,29 +116,30 @@ export class LoginComponent implements OnInit {
 
     modalRef.result.then(async (result) => {
       this.api.logDev('Dados do formulário:', result);
-      
+
       if (result && result.codigo_acesso) {
         // Preenche o código de ativação
         this.form_activation.patchValue({
           codigo_ativacao: result.codigo_acesso
         });
-        
+
         // Busca a empresa automaticamente
         try {
           this.loading_activation = true;
           const empresa = await this.endpoint.getEmpresaByCodigoAtivacao(result.codigo_acesso);
           this.sessao.setEmpresaAtiva(empresa);
-          
+
           // Preenche username e senha
           this.form.patchValue({
             documento: result.usuario?.username || '',
             senha: result.senha || ''
           });
-          
+
           this.step = 2;
         } catch (error) {
           this.api.logDev('Erro ao ativar empresa:', error);
           this.error = error;
+
         } finally {
           this.loading_activation = false;
         }

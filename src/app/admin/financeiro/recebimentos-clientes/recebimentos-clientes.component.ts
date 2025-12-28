@@ -234,7 +234,7 @@ export class RecebimentosClientesComponent {
         valor_total_em_atraso: this.painelData.valor_total_em_atraso
       };
 
-      await this.reportService.gerarRelatorioConta(dadosConta, empresa);
+      await this.reportService.gerarRelatorioConta(dadosConta);
       this.alertService.showSuccess('PDF gerado com sucesso!');
     } catch (error: any) {
       console.error('Erro ao gerar PDF:', error);
@@ -273,21 +273,21 @@ export class RecebimentosClientesComponent {
       if (formato === 'pdf') {
         if (isMobile && typeof navigator.share === 'function') {
           // Gerar PDF como blob e compartilhar nativamente
-          const pdfBlob = await this.reportService.gerarRelatorioContaBlob(dadosConta, empresa, 'pdf');
+          const pdfBlob = await this.reportService.gerarRelatorioContaBlob(dadosConta, 'pdf');
           await this.compartilharNativo(pdfBlob, 'conta.pdf', 'application/pdf');
         } else {
           // Download tradicional
-          await this.reportService.gerarRelatorioConta(dadosConta, empresa);
+          await this.reportService.gerarRelatorioConta(dadosConta);
         }
         this.alertService.showSuccess('PDF gerado com sucesso!');
       } else {
         // Gerar imagem
         if (isMobile && typeof navigator.share === 'function') {
-          const imageBlob = await this.reportService.gerarRelatorioContaBlob(dadosConta, empresa, 'image');
+          const imageBlob = await this.reportService.gerarRelatorioContaBlob(dadosConta, 'image');
           await this.compartilharNativo(imageBlob, 'conta.png', 'image/png');
         } else {
           // Download tradicional
-          await this.reportService.gerarRelatorioContaImagem(dadosConta, empresa);
+          await this.reportService.gerarRelatorioContaImagem(dadosConta);
         }
         this.alertService.showSuccess('Imagem gerada com sucesso!');
       }
