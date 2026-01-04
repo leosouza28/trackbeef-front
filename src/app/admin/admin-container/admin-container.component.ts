@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, TemplateRef } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, TemplateRef } from '@angular/core';
 import { NgbOffcanvas } from '@ng-bootstrap/ng-bootstrap';
 import { ApiService } from 'src/app/services/api.service';
 import { Router, NavigationEnd } from '@angular/router';
@@ -19,6 +19,7 @@ export class AdminContainerComponent implements OnInit {
 
   version: any;
   menu: any[] = [];
+
   logged_user: any;
 
   dashboard_admin_data: any = null;
@@ -50,6 +51,7 @@ export class AdminContainerComponent implements OnInit {
         this.offcanvasService.dismiss();
       });
   }
+
 
   closeCanvas() {
     this.offcanvasService.dismiss();

@@ -248,57 +248,87 @@ export class RecebimentosClientesComponent {
     this.modalService.open(content, { size: 'sm', centered: true });
   }
 
-  async compartilharConta(formato: 'pdf' | 'imagem') {
-    this.processandoCompartilhamento = true;
-    this.formatoCompartilhamento = formato === 'pdf' ? 'PDF' : 'imagem';
+  async compartilharConta(formato: 'pdf' | 'imagem' | 'link',) {
+    // Verificar se é dispositivo móvel
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (formato === 'link') {
 
-    try {
-      // Buscar dados da empresa
-      const empresa = await this.endpointService.getConfiguracoesEmpresa();
-
-      // Preparar dados para o relatório
-      const dadosConta = {
-        cliente: this.painelData.pessoa,
-        vendas: this.vendas,
-        saldo_devedor: this.painelData.saldo_devedor,
-        valor_total: this.painelData.valor_total,
-        valor_recebido: this.painelData.valor_recebido,
-        valor_total_em_aberto: this.painelData.valor_total_em_aberto,
-        valor_total_em_atraso: this.painelData.valor_total_em_atraso
-      };
-
-      // Verificar se é dispositivo móvel
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-      if (formato === 'pdf') {
-        if (isMobile && typeof navigator.share === 'function') {
-          // Gerar PDF como blob e compartilhar nativamente
-          const pdfBlob = await this.reportService.gerarRelatorioContaBlob(dadosConta, 'pdf');
-          await this.compartilharNativo(pdfBlob, 'conta.pdf', 'application/pdf');
-        } else {
-          // Download tradicional
-          await this.reportService.gerarRelatorioConta(dadosConta);
+      let link = this.painelData.link;
+      if (isMobile) {
+        // Tentar compartilhar nativamente
+        try {
+          await navigator.share({
+            title: `Conta - ${this.painelData.pessoa.nome}`,
+            text: `Acompanhe a cobrança de ${this.painelData.pessoa.nome} pelo link abaixo:`,
+            url: link
+          });
+        } catch (error: any) {
+          if (error.name !== 'AbortError') {
+            console.error('Erro ao compartilhar link:', error);
+            this.alertService.showDanger('Erro ao compartilhar o link da conta');
+          }
+          // Usuário cancelou o compartilhamento - não é erro
         }
-        this.alertService.showSuccess('PDF gerado com sucesso!');
       } else {
-        // Gerar imagem
-        if (isMobile && typeof navigator.share === 'function') {
-          const imageBlob = await this.reportService.gerarRelatorioContaBlob(dadosConta, 'image');
-          await this.compartilharNativo(imageBlob, 'conta.png', 'image/png');
-        } else {
-          // Download tradicional
-          await this.reportService.gerarRelatorioContaImagem(dadosConta);
+        // Copiar para área de transferência
+        try {
+          await navigator.clipboard.writeText(link);
+          this.alertService.showSuccess('Link da conta copiado para a área de transferência!');
+        } catch (error) {
+          console.error('Erro ao copiar link:', error);
+          this.alertService.showDanger('Erro ao copiar o link da conta');
         }
-        this.alertService.showSuccess('Imagem gerada com sucesso!');
       }
+    } else {
 
-      this.modalService.dismissAll();
-    } catch (error: any) {
-      console.error('Erro ao gerar arquivo:', error);
-      this.alertService.showDanger('Erro ao gerar arquivo para compartilhamento');
-    } finally {
-      this.processandoCompartilhamento = false;
-      this.formatoCompartilhamento = '';
+      this.processandoCompartilhamento = true;
+      this.formatoCompartilhamento = formato === 'pdf' ? 'PDF' : 'imagem';
+
+      try {
+        // Buscar dados da empresa
+        const empresa = await this.endpointService.getConfiguracoesEmpresa();
+
+        // Preparar dados para o relatório
+        const dadosConta = {
+          cliente: this.painelData.pessoa,
+          vendas: this.vendas,
+          saldo_devedor: this.painelData.saldo_devedor,
+          valor_total: this.painelData.valor_total,
+          valor_recebido: this.painelData.valor_recebido,
+          valor_total_em_aberto: this.painelData.valor_total_em_aberto,
+          valor_total_em_atraso: this.painelData.valor_total_em_atraso
+        };
+
+        if (formato === 'pdf') {
+          if (isMobile && typeof navigator.share === 'function') {
+            // Gerar PDF como blob e compartilhar nativamente
+            const pdfBlob = await this.reportService.gerarRelatorioContaBlob(dadosConta, 'pdf');
+            await this.compartilharNativo(pdfBlob, 'conta.pdf', 'application/pdf');
+          } else {
+            // Download tradicional
+            await this.reportService.gerarRelatorioConta(dadosConta);
+          }
+          this.alertService.showSuccess('PDF gerado com sucesso!');
+        } else {
+          // Gerar imagem
+          if (isMobile && typeof navigator.share === 'function') {
+            const imageBlob = await this.reportService.gerarRelatorioContaBlob(dadosConta, 'image');
+            await this.compartilharNativo(imageBlob, 'conta.png', 'image/png');
+          } else {
+            // Download tradicional
+            await this.reportService.gerarRelatorioContaImagem(dadosConta);
+          }
+          this.alertService.showSuccess('Imagem gerada com sucesso!');
+        }
+
+        this.modalService.dismissAll();
+      } catch (error: any) {
+        console.error('Erro ao gerar arquivo:', error);
+        this.alertService.showDanger('Erro ao gerar arquivo para compartilhamento');
+      } finally {
+        this.processandoCompartilhamento = false;
+        this.formatoCompartilhamento = '';
+      }
     }
   }
 

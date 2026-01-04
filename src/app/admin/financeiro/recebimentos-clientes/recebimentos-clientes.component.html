@@ -21,7 +21,8 @@
                         </button>
                         <h1 class="fw-bold mb-0">Detalhes de Recebimento</h1>
                     </div>
-                    <button class="btn btn-primary" (click)="abrirModalCompartilhar(modalCompartilhar)" [disabled]="loading">
+                    <button class="btn btn-primary" (click)="abrirModalCompartilhar(modalCompartilhar)"
+                        [disabled]="loading">
                         <i class="bi bi-share me-2"></i>Compartilhar Conta
                     </button>
                 </div>
@@ -173,27 +174,31 @@
                                 <div class="px-3 py-3 border-bottom cursor-pointer hover-bg-light position-relative"
                                     (click)="toggleGroup(dataGroup.dataKey)">
                                     <!-- Barra lateral colorida -->
-                                    <div class="position-absolute top-0 start-0 h-100" 
-                                         style="width: 4px;"
-                                         [class.bg-danger]="dataGroup.status_quitacao === 'PENDENTE'"
-                                         [class.bg-warning]="dataGroup.status_quitacao === 'PARCIAL'"
-                                         [class.bg-success]="dataGroup.status_quitacao === 'QUITADA'">
+                                    <div class="position-absolute top-0 start-0 h-100" style="width: 4px;"
+                                        [class.bg-danger]="dataGroup.status_quitacao === 'PENDENTE'"
+                                        [class.bg-warning]="dataGroup.status_quitacao === 'PARCIAL'"
+                                        [class.bg-success]="dataGroup.status_quitacao === 'QUITADA'">
                                     </div>
-                                    
-                                    <div class="d-flex justify-content-between align-items-center" style="padding-left: 8px;">
+
+                                    <div class="d-flex justify-content-between align-items-center"
+                                        style="padding-left: 8px;">
                                         <div class="d-flex align-items-center gap-3">
-                                            <i class="bi text-muted" 
-                                               [class.bi-chevron-right]="!isGroupExpanded(dataGroup.dataKey)"
-                                               [class.bi-chevron-down]="isGroupExpanded(dataGroup.dataKey)">
+                                            <i class="bi text-muted"
+                                                [class.bi-chevron-right]="!isGroupExpanded(dataGroup.dataKey)"
+                                                [class.bi-chevron-down]="isGroupExpanded(dataGroup.dataKey)">
                                             </i>
                                             <div>
                                                 <div class="fw-bold">{{dataGroup.data | dateSimple }}</div>
                                                 <div class="small text-muted">
-                                                    Total: <span class="text-dark">{{dataGroup.valor_total | moneyBrl}}</span>
+                                                    Total: <span class="text-dark">{{dataGroup.valor_total |
+                                                        moneyBrl}}</span>
                                                     <span *ngIf="dataGroup.valor_em_aberto > 0" class="ms-2">
-                                                        • Falta: <span class="text-warning fw-bold">{{dataGroup.valor_em_aberto | moneyBrl}}</span>
+                                                        • Falta: <span
+                                                            class="text-warning fw-bold">{{dataGroup.valor_em_aberto |
+                                                            moneyBrl}}</span>
                                                     </span>
-                                                    <span *ngIf="dataGroup.valor_em_aberto <= 0" class="ms-2 text-success">
+                                                    <span *ngIf="dataGroup.valor_em_aberto <= 0"
+                                                        class="ms-2 text-success">
                                                         • <i class="bi bi-check-circle-fill"></i> Quitado
                                                     </span>
                                                 </div>
@@ -216,7 +221,9 @@
                                         class="px-3 py-2 border-bottom hover-bg">
                                         <div class="d-flex align-items-center">
                                             <div class="flex-grow-1">
-                                                <strong>{{item.produto.nome}}<span *ngIf="item.pesos && item.pesos.length > 0"> ({{item.pesos.length}})</span></strong>
+                                                <strong>{{item.produto.nome}}<span
+                                                        *ngIf="item.pesos && item.pesos.length > 0">
+                                                        ({{item.pesos.length}})</span></strong>
                                             </div>
                                             <div class="text-end text-muted" style="width: 150px;">
                                                 {{item.quantidade | number:'1.2-2':'pt-BR'}} {{item.produto.unidade}}
@@ -228,7 +235,8 @@
                                         <!-- Peças -->
                                         <div *ngIf="item.pesos && item.pesos.length > 0" class="mt-1">
                                             <small class="text-muted">
-                                                <span *ngFor="let peso of item.pesos; let last = last">{{peso}}&nbsp;</span>
+                                                <span
+                                                    *ngFor="let peso of item.pesos; let last = last">{{peso}}&nbsp;</span>
                                             </small>
                                         </div>
                                     </div>
@@ -261,16 +269,15 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr *ngFor="let recebimento of painelData.lista_recebimentos" 
-                                        class="cursor-pointer"
+                                    <tr *ngFor="let recebimento of painelData.lista_recebimentos" class="cursor-pointer"
                                         (click)="abrirDetalhesRecebimento(recebimento, modalDetalhesRecebimento)">
                                         <td>{{recebimento.data_pagamento | dateSimple}}</td>
                                         <td>{{recebimento.forma_pagamento.nome}}</td>
                                         <td class="text-end fw-bold text-success">{{recebimento.valor | moneyBrl}}</td>
                                         <td class="text-center" (click)="$event.stopPropagation()">
-                                            <button class="btn btn-link btn-sm text-danger p-0" 
-                                                    (click)="abrirModalExclusao(recebimento, modalExcluirRecebimento)"
-                                                    title="Excluir recebimento">
+                                            <button class="btn btn-link btn-sm text-danger p-0"
+                                                (click)="abrirModalExclusao(recebimento, modalExcluirRecebimento)"
+                                                title="Excluir recebimento">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </td>
@@ -395,8 +402,7 @@
         <button type="button" class="btn btn-secondary" (click)="modal.dismiss()" [disabled]="excluindoRecebimento">
             Cancelar
         </button>
-        <button type="button" class="btn btn-danger" (click)="confirmarExclusao()"
-            [disabled]="excluindoRecebimento">
+        <button type="button" class="btn btn-danger" (click)="confirmarExclusao()" [disabled]="excluindoRecebimento">
             <span *ngIf="excluindoRecebimento" class="spinner-border spinner-border-sm me-2"></span>
             <i *ngIf="!excluindoRecebimento" class="bi bi-trash me-2"></i>
             {{excluindoRecebimento ? 'Excluindo...' : 'Excluir'}}
@@ -504,8 +510,7 @@
         <p class="text-muted mb-3">Escolha o formato para compartilhar a conta:</p>
         <div class="d-grid gap-2">
             <button class="btn btn-lg btn-outline-danger d-flex align-items-center justify-content-center"
-                    (click)="compartilharConta('pdf')"
-                    [disabled]="processandoCompartilhamento">
+                (click)="compartilharConta('pdf')" [disabled]="processandoCompartilhamento">
                 <i class="bi bi-file-pdf fs-4 me-3"></i>
                 <div class="text-start">
                     <div class="fw-bold">PDF</div>
@@ -513,12 +518,19 @@
                 </div>
             </button>
             <button class="btn btn-lg btn-outline-primary d-flex align-items-center justify-content-center"
-                    (click)="compartilharConta('imagem')"
-                    [disabled]="processandoCompartilhamento">
+                (click)="compartilharConta('imagem')" [disabled]="processandoCompartilhamento">
                 <i class="bi bi-image fs-4 me-3"></i>
                 <div class="text-start">
                     <div class="fw-bold">Imagem</div>
                     <small class="text-muted">Imagem PNG de alta qualidade</small>
+                </div>
+            </button>
+            <button class="btn btn-lg btn-outline-secondary d-flex align-items-center justify-content-center"
+                (click)="compartilharConta('link')">
+                <i class="bi bi-link fs-4 me-3"></i>
+                <div class="text-start">
+                    <div class="fw-bold">Link da Conta</div>
+                    <small class="text-muted">Link para acompanhar a cobrança</small>
                 </div>
             </button>
         </div>
@@ -528,7 +540,8 @@
         </div>
     </div>
     <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()" [disabled]="processandoCompartilhamento">
+        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()"
+            [disabled]="processandoCompartilhamento">
             Cancelar
         </button>
     </div>
